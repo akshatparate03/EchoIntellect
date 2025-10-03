@@ -52,10 +52,11 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 100,
+            "max_tokens": 100,      # chhota rakho for short responses
             "temperature": 0.7,
             "top_p": 0.9,
-            "stream": False
+            "stream": False,
+            "search_web": False     # 🚫 prevent fetching unnecessary web info
         }
         return url, headers, payload, None
 

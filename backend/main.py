@@ -68,8 +68,12 @@ def ask(body: AskBody):
         # DeepSeek का response
         if body.model.lower() == "deepseek":
             try:
-                # Sirf assistant ka content extract karo
                 answer = data["model_response"]["choices"][0]["message"]["content"]
+                import re
+                # Remove only <hink>, <think> tags
+                answer = re.sub(r"</?(hink|think)>", "", answer)
+                # Remove leading/trailing whitespace and extra newlines
+                answer = answer.strip()
             except Exception:
                 answer = "[ERROR: Cannot extract DeepSeek response]"
             return {"text": answer}
