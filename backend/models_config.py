@@ -14,34 +14,54 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     }
 
     if model == "gpt":
-        url = os.getenv("GPT_URL", "https://chatgpt-42.p.rapidapi.com/gpt4")
-        headers["x-rapidapi-host"] = os.getenv("GPT_HOST", "chatgpt-42.p.rapidapi.com")
+        url = os.getenv("GPT_URL")
+        headers["x-rapidapi-host"] = os.getenv("GPT_HOST")
         payload = {
             "messages": [{"role": "user", "content": prompt}],
             "web_access": False
         }
-        return url, headers, payload
+        return url, headers, payload, None  # no query params
 
     if model == "gemini":
-        # Replace host/path with the actual RapidAPI Gemini endpoint you use
-        url = "https://google-gemini-pro.p.rapidapi.com/v1/text"
-        headers["x-rapidapi-host"] = "google-gemini-pro.p.rapidapi.com"
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        return url, headers, payload
+        # RapidAPI Gemini endpoint
+        url = os.getenv("GEMINI_URL")
+        headers["x-rapidapi-host"] = os.getenv("GEMINI_HOST")
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": prompt}]
+                }
+            ]
+        }
+        # Querystring required by RapidAPI Gemini
+        querystring = {"key": os.getenv("GEMINI_API_KEY")}
+        return url, headers, payload, querystring
 
     if model == "perplexity":
-        # Replace with Perplexity RapidAPI endpoint
-        url = "https://perplexity-ai.p.rapidapi.com/chat/completions"
-        headers["x-rapidapi-host"] = "perplexity-ai.p.rapidapi.com"
-        payload = {"model":"llama-3","messages":[{"role":"user","content":prompt}]}
-        return url, headers, payload
+        # ✅ Correct RapidAPI Perplexity endpoint
+        url = os.getenv("PERPLEXITY_URL")
+        headers["x-rapidapi-host"] = os.getenv("PERPLEXITY_HOST")
+        payload = {"content": prompt}
+        return url, headers, payload, None
 
     if model == "deepseek":
-        # Replace with DeepSeek RapidAPI endpoint
-        url = "https://deepseek.p.rapidapi.com/chat/completions"
-        headers["x-rapidapi-host"] = "deepseek.p.rapidapi.com"
-        payload = {"model":"deepseek-chat","messages":[{"role":"user","content":prompt}]}
-        return url, headers, payload
+        url = os.getenv("DEEPSEEK_URL")
+        headers["x-rapidapi-host"] = os.getenv("DEEPSEEK_HOST")
+        payload = {
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 100,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "stream": False
+        }
+        return url, headers, payload, None
 
-    # Default: echo back
-    return "https://chatgpt-42.p.rapidapi.com/aitohuman", {**headers, "x-rapidapi-host":"chatgpt-42.p.rapidapi.com"}, {"text": prompt}
+    return (
+    os.getenv("GPT_URL"),
+    {**headers, "x-rapidapi-host": os.getenv("GPT_HOST")},
+    {"text": prompt},
+    None
+)
