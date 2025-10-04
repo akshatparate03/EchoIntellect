@@ -1,15 +1,12 @@
-"use client";
-
-import type React from "react";
-
-import { useState } from "react";
-
-const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || "";
+import { useRef, useState } from "react";
 
 export default function Contact() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,14 +16,13 @@ export default function Contact() {
     const data = new FormData(e.currentTarget);
     try {
       if (!APPS_SCRIPT_URL) throw new Error("Apps Script URL not set");
-      const res = await fetch(APPS_SCRIPT_URL, {
+      await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         body: data,
         mode: "no-cors",
       });
-      // no-cors: assume success
       setOk("Feedback sent!");
-      e.currentTarget.reset();
+      formRef.current?.reset(); // <-- safe reset
     } catch (e: any) {
       setErr(e?.message || "Failed to send");
     } finally {
@@ -37,7 +33,7 @@ export default function Contact() {
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
       <h2 className="text-2xl font-semibold mb-4">Send Feedback</h2>
-      <form onSubmit={submit} className="space-y-4">
+      <form ref={formRef} onSubmit={submit} className="space-y-4">
         <div>
           <label className="label">Name</label>
           <input className="input" name="name" required />

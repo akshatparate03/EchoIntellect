@@ -40,6 +40,7 @@ def ask(body: AskBody):
     url, headers, payload, querystring = build_request(body.model, body.prompt, rapidapi_key)
 
     try:
+        # API Call
         if querystring:
             r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=60)
         else:
@@ -48,51 +49,74 @@ def ask(body: AskBody):
         r.raise_for_status()
         data = r.json()
 
-        # Gemini का response अलग structure में आता है
+        # ----------------- GEMINI -----------------
         if body.model.lower() == "gemini":
             try:
-                answer = data["candidates"][0]["content"]["parts"][0]["text"]
+                return {"text": data["candidates"][0]["content"]["parts"][0]["text"]}
             except Exception:
-                answer = str(data)
-            return {"text": answer}
+                return {"text": str(data)}
 
-        # Perplexity का response अलग है
+        # ----------------- PERPLEXITY -----------------
         if body.model.lower() == "perplexity":
             try:
-                # Properly extract the nested structure
-                answer = data["choices"]["content"]["parts"][0]["text"]
+                return {"text": data["choices"]["content"]["parts"][0]["text"]}
             except Exception:
-                answer = str(data)
-            return {"text": answer}
-        
-        # DeepSeek का response
+                return {"text": str(data)}
+
+        # ----------------- DEEPSEEK -----------------
         if body.model.lower() == "deepseek":
             try:
-                answer = data["model_response"]["choices"][0]["message"]["content"]
                 import re
-                # Remove only <hink>, <think> tags
-                answer = re.sub(r"</?(hink|think)>", "", answer)
-                # Remove leading/trailing whitespace and extra newlines
-                answer = answer.strip()
+                answer = data["model_response"]["choices"][0]["message"]["content"]
+
+                # Remove <think>/<hink> blocks with content
+                answer = re.sub(r"<\/?(think|hink)>.*?<\/(think|hink)>", "", answer, flags=re.DOTALL)
+
+                # Remove reasoning-style meta lines
+                answer = re.sub(
+                    r"(Okay,.*?$|So,.*?$|I need to.*?$|Looking at.*?$)",
+                    "",
+                    answer,
+                    flags=re.IGNORECASE | re.MULTILINE
+                )
+
+                # Keep only last meaningful conversational line
+                parts = [p.strip() for p in answer.splitlines() if p.strip()]
+                if parts:
+                    answer = parts[-1]
+
+                return {"text": answer.strip()}
             except Exception:
-                answer = "[ERROR: Cannot extract DeepSeek response]"
-            return {"text": answer}
+                return {"text": "[ERROR: Cannot extract DeepSeek response]"}
 
-        # GPT / बाकी models
-        result_str = data.get("result", "")
-        answer = None
-        try:
-            json_part = result_str.split("{'id'")[-1]
-            json_part = "{'id'" + json_part
-            json_dict = ast.literal_eval(json_part)
-            answer = json_dict["choices"][0]["message"]["content"]
-        except Exception:
-            answer = result_str.split("}")[-1].strip()
+        # ----------------- GPT / OTHERS -----------------
+        if body.model.lower() == "gpt":
+            try:
+                if "choices" in data and len(data["choices"]) > 0:
+                    return {"text": data["choices"][0]["message"]["content"].strip()}
+                else:
+                    # Fallback to result parsing
+                    result_str = data.get("result", "")
+                    if result_str:
+                        import ast
+                        try:
+                            json_part = result_str.split("{'id'")[-1]
+                            json_part = "{'id'" + json_part
+                            json_dict = ast.literal_eval(json_part)
+                            return {"text": json_dict["choices"][0]["message"]["content"].strip()}
+                        except Exception:
+                            return {"text": result_str.strip()}
+                    else:
+                        return {"text": str(data)}
+            except Exception:
+                return {"text": "[ERROR: Cannot extract GPT response]"}
 
-        return {"text": answer}
+        # ----------------- DEFAULT FALLBACK -----------------
+        return {"text": str(data)}
 
     except Exception as e:
         return {"text": f"[EXCEPTION] {str(e)}"}
+
     
 @app.post("/api/share")
 def create_share(body: ShareBody):
