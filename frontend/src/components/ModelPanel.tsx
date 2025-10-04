@@ -41,12 +41,7 @@ export default function ModelPanel({
     setResponse("");
     try {
       const { text } = await askModel(model, prompt);
-      console.log("[v0] API response for", model, ":", JSON.stringify(text));
-      console.log("[v0] Type of text:", typeof text);
-      console.log(
-        "[v0] Text includes 'undefined':",
-        text?.includes?.("undefined")
-      );
+      // console.log statements removed for clean console
       setResponse(text || "");
       incrementUsage(model);
       onResponse?.(text || "");
