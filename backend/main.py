@@ -5,6 +5,7 @@ import os, requests, uuid, time
 from typing import Dict
 from models_config import build_request
 import ast
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -31,11 +32,25 @@ class ShareBody(BaseModel):
 # In-memory shares store
 SHARES: Dict[str, Dict] = {}
 
+def clean_text(text: str) -> str:
+    if not text:
+        return ""
+    # Remove markdown headings (##, ###, ####, etc.)
+    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+    # Remove asterisks (* or ** used in markdown bold/italic)
+    text = re.sub(r"\*+", "", text)
+    # Remove underscores (_ or __ used for italics)
+    text = re.sub(r"_+", "", text)
+    # Remove backticks (`) used in code formatting
+    text = re.sub(r"`+", "", text)
+    # Strip leading/trailing spaces
+    return text.strip()
+
 @app.post("/api/ask")
 def ask(body: AskBody):
     rapidapi_key = os.getenv("RAPIDAPI_KEY")
     if not rapidapi_key:
-        return {"text": f"[MOCK:{body.model}] You asked: {body.prompt}"}
+        return {"text": clean_text(f"[MOCK:{body.model}] You asked: {body.prompt}")}
 
     url, headers, payload, querystring = build_request(body.model, body.prompt, rapidapi_key)
 
@@ -52,21 +67,22 @@ def ask(body: AskBody):
         # ----------------- GEMINI -----------------
         if body.model.lower() == "gemini":
             try:
-                return {"text": data["candidates"][0]["content"]["parts"][0]["text"]}
+                answer = data["candidates"][0]["content"]["parts"][0]["text"]
+                return {"text": clean_text(answer)}
             except Exception:
-                return {"text": str(data)}
+                return {"text": clean_text(str(data))}
 
         # ----------------- PERPLEXITY -----------------
         if body.model.lower() == "perplexity":
             try:
-                return {"text": data["choices"]["content"]["parts"][0]["text"]}
+                answer = data["choices"]["content"]["parts"][0]["text"]
+                return {"text": clean_text(answer)}
             except Exception:
-                return {"text": str(data)}
+                return {"text": clean_text(str(data))}
 
         # ----------------- DEEPSEEK -----------------
         if body.model.lower() == "deepseek":
             try:
-                import re
                 answer = data["model_response"]["choices"][0]["message"]["content"]
 
                 # Remove <think>/<hink> blocks with content
@@ -85,7 +101,7 @@ def ask(body: AskBody):
                 if parts:
                     answer = parts[-1]
 
-                return {"text": answer.strip()}
+                return {"text": clean_text(answer)}
             except Exception:
                 return {"text": "[ERROR: Cannot extract DeepSeek response]"}
 
@@ -93,26 +109,27 @@ def ask(body: AskBody):
         if body.model.lower() == "gpt":
             try:
                 if "choices" in data and len(data["choices"]) > 0:
-                    return {"text": data["choices"][0]["message"]["content"].strip()}
+                    answer = data["choices"][0]["message"]["content"]
+                    return {"text": clean_text(answer)}
                 else:
                     # Fallback to result parsing
                     result_str = data.get("result", "")
                     if result_str:
-                        import ast
                         try:
                             json_part = result_str.split("{'id'")[-1]
                             json_part = "{'id'" + json_part
                             json_dict = ast.literal_eval(json_part)
-                            return {"text": json_dict["choices"][0]["message"]["content"].strip()}
+                            answer = json_dict["choices"][0]["message"]["content"]
+                            return {"text": clean_text(answer)}
                         except Exception:
-                            return {"text": result_str.strip()}
+                            return {"text": clean_text(result_str)}
                     else:
-                        return {"text": str(data)}
+                        return {"text": clean_text(str(data))}
             except Exception:
                 return {"text": "[ERROR: Cannot extract GPT response]"}
 
         # ----------------- DEFAULT FALLBACK -----------------
-        return {"text": str(data)}
+        return {"text": clean_text(str(data))}
 
     except Exception as e:
         return {"text": f"[EXCEPTION] {str(e)}"}
