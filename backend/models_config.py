@@ -20,9 +20,8 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {
                     "role": "system",
-                    "content": "Always reply in the same language and style as the user prompt. "
-                               "If user writes in Hinglish, respond in Hinglish. "
-                               "If in English, respond in English."
+                    "content": "Always reply in the same language as the input.\n\n"
+                               "Match Hinglish with Hinglish, English with English.\n\n"
                 },
                 {"role": "user", "content": prompt}
             ],
@@ -37,8 +36,8 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "contents": [
                 {
                     "role": "user",
-                    "parts": [{"text": "Always reply in the same language as the input. "
-                                    "Match Hinglish with Hinglish, English with English.\n\n"
+                    "parts": [{"text": "Always reply in the same language as the input.\n\n"
+                                       "Match Hinglish with Hinglish, English with English.\n\n"
                                     + prompt}]
                 }
             ]
@@ -51,7 +50,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         headers["x-rapidapi-host"] = os.getenv("PERPLEXITY_HOST")
         payload = {
             "content": "Always reply in the same language as input.\n\n"
-                    "Match Hinglish with Hinglish, English with English.\n\n"
+                       "Match Hinglish with Hinglish, English with English.\n\n"
                         + prompt
         }
         return url, headers, payload, None
@@ -67,7 +66,15 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
 
         payload = {
             "model": "DeepSeek-V3-0324",
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Always reply in the same language as the input.\n\n"
+                               "Match Hinglish with Hinglish, English with English.\n\n"
+                               "Give detailed, long, and comprehensive responses."
+                },
+                {"role": "user", "content": prompt}
+            ],
             "max_tokens": 2048,
             "temperature": 0.7
         }
@@ -82,9 +89,8 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {
                     "role": "system",
-                    "content": "Always reply in the same language and style as the user prompt. "
-                            "If user writes in Hinglish, respond in Hinglish. "
-                            "If in English, respond in English."
+                    "content": "Always reply in the same language as the input. "
+                               "Match Hinglish with Hinglish, English with English.\n\n"
                 },
                 {"role": "user", "content": prompt}
             ],
