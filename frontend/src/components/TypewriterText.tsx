@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function TypewriterText({
   text,
@@ -12,18 +12,47 @@ export default function TypewriterText({
   onDone?: () => void;
 }) {
   const [output, setOutput] = useState("");
+  const indexRef = useRef(0);
+  const isDoneRef = useRef(false);
+
   useEffect(() => {
     setOutput("");
-    let i = 0;
+    indexRef.current = 0;
+    isDoneRef.current = false;
+
     const id = setInterval(() => {
-      setOutput((prev) => prev + text[i]);
-      i++;
-      if (i >= text.length) {
+      if (isDoneRef.current) {
+        return;
+      }
+
+      const currentIndex = indexRef.current;
+
+      if (currentIndex >= text.length) {
+        isDoneRef.current = true;
+        clearInterval(id);
+        onDone?.();
+        return;
+      }
+
+      const char = text[currentIndex];
+      if (char !== undefined) {
+        setOutput((prev) => prev + char);
+      }
+
+      indexRef.current++;
+
+      if (indexRef.current >= text.length) {
+        isDoneRef.current = true;
         clearInterval(id);
         onDone?.();
       }
     }, Math.max(5, speed));
-    return () => clearInterval(id);
+
+    return () => {
+      clearInterval(id);
+      isDoneRef.current = true;
+    };
   }, [text, speed, onDone]);
+
   return <div className="whitespace-pre-wrap leading-relaxed">{output}</div>;
 }
