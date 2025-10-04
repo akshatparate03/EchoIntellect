@@ -83,27 +83,36 @@ def ask(body: AskBody):
         # ----------------- DEEPSEEK -----------------
         if body.model.lower() == "deepseek":
             try:
-                answer = data["model_response"]["choices"][0]["message"]["content"]
-
-                # Remove <think>/<hink> blocks with content
+                choices = data.get("choices")
+                if not choices or len(choices) == 0:
+                    return {"text": "[ERROR: No choices returned by DeepSeek]"}
+                
+                message = choices[0].get("message")
+                if not message:
+                    return {"text": "[ERROR: No message in DeepSeek response]"}
+                
+                # Prefer content, fallback to reasoning_content
+                answer = message.get("content") or message.get("reasoning_content")
+                if not answer:
+                    return {"text": "[ERROR: DeepSeek returned empty content]"}
+                
+                # Remove <think> or <hink> tags and their content
                 answer = re.sub(r"<\/?(think|hink)>.*?<\/(think|hink)>", "", answer, flags=re.DOTALL)
-
-                # Remove reasoning-style meta lines
-                answer = re.sub(
-                    r"(Okay,.*?$|So,.*?$|I need to.*?$|Looking at.*?$)",
-                    "",
-                    answer,
-                    flags=re.IGNORECASE | re.MULTILINE
-                )
-
-                # Keep only last meaningful conversational line
+                
+                # Split into lines, strip spaces, remove empty lines
                 parts = [p.strip() for p in answer.splitlines() if p.strip()]
-                if parts:
-                    answer = parts[-1]
+                
+                # Join all lines to keep full response
+                answer = "\n".join(parts)
+                
+                # Final cleanup (markdown, asterisks, underscores, backticks)
+                answer = clean_text(answer)
+                
+                return {"text": answer}
 
-                return {"text": clean_text(answer)}
-            except Exception:
-                return {"text": "[ERROR: Cannot extract DeepSeek response]"}
+            except Exception as e:
+                return {"text": f"[ERROR: Cannot extract DeepSeek response: {e}]"}
+
 
         # ----------------- GPT / OTHERS -----------------
         if body.model.lower() == "gpt":

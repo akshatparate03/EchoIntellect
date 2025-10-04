@@ -59,32 +59,20 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
 
     if model == "deepseek":
         url = os.getenv("DEEPSEEK_URL")
-        headers["x-rapidapi-host"] = os.getenv("DEEPSEEK_HOST")
+        headers = {
+            "x-rapidapi-key": rapidapi_key,
+            "x-rapidapi-host": os.getenv("DEEPSEEK_HOST"),
+            "Content-Type": "application/json"
+        }
+
         payload = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a chat assistant. "
-                        "Always reply ONLY with the final message. "
-                        "Do NOT include reasoning, thinking steps, or explanations. "
-                        "Just give the final conversational reply directly. "
-                        "Match the style and language of the user. "
-                        "Example:\n"
-                        "User: hii bhai kese ho?\n"
-                        "Assistant: Main theek hoon, bhai! Tum kaise ho?\n\n"
-                        "User: How are you?\n"
-                        "Assistant: I'm good! How are you?"
-                    )
-                },
-                {"role": "user", "content": prompt}
-            ],
+            "model": "DeepSeek-V3-0324",
+            "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 2048,
-            "temperature": 0.7,
-            "top_p": 0.9,
-            "stop": ["</s>", "So,", "Okay,", "Reasoning:", "Explanation:", "I should"]
+            "temperature": 0.7
         }
         return url, headers, payload, None
+
 
 
     return (
