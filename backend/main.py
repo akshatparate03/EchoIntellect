@@ -57,9 +57,9 @@ def ask(body: AskBody):
     try:
         # API Call
         if querystring:
-            r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=60)
+            r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=120)
         else:
-            r = requests.post(url, json=payload, headers=headers, timeout=60)
+            r = requests.post(url, json=payload, headers=headers, timeout=120)
 
         r.raise_for_status()
         data = r.json()

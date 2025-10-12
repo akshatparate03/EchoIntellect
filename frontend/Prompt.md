@@ -60,6 +60,7 @@
 - ###### **jab chaaro model ke responce completliy generate ho jaaye to user kisi ke bhi model ke header pe click karega to woh akela model full screen mode pe open ho jaayega and ek back button rahega jisko dabaate hi woh wapas chaaro model ke responce waale page me pohoch jaayega.**
 - ###### **user home page ke box pe jo prompt likh ke send karega then woh jo models select karega un sabhi model pe ek saath promt send ho jaana chahiye jo model usne proceed ke waqt select kiya tha model selecting ke doraan and sirf wahi model show ho jo user ne select kiya hai baaki ke nhi (eg: user ne bas 2 hi model select kiye to sirf 2 hi model me response send honge and show honge jo user ne select kiye the).**
 - ###### **ek signup/signin system rakhna hai which save only in users browser not use a database just normal sa browser based login method jiski help se ham har user ko ek din me har model ke liye bas 15 request denge jese hi user 15th prompt bhej dega phir woh agle 24 ghanta baad hi agla prompt bhej paayega kisi bhi model me.**
+- ###### **create acc otp based rakhna hai for the security and confirmation purpose.**
 - ###### **bina login kare koi bhi prompt accept na ho agar user login nhi hai or prompt likh ke enter dabaaye to login page open ho jaaye and user ka login karna pade mandatory taaki ham properly 15 request gin sake har user ki.**
 
 ### **Pages ka structure and design kesi rehene waali hai:-**

@@ -71,7 +71,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                     "role": "system",
                     "content": "Always reply in the same language as the input.\n\n"
                                "Match Hinglish with Hinglish, English with English.\n\n"
-                               "Give detailed, long, and comprehensive responses."
+                               "Keep responses short, simple, and only as detailed as the user asks."
                 },
                 {"role": "user", "content": prompt}
             ],
