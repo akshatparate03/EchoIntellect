@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from google import genai
 load_dotenv()
 
 def build_request(model: str, prompt: str, rapidapi_key: str):
@@ -13,6 +14,10 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         "Content-Type": "application/json",
     }
 
+    # ==============================
+    # GPT
+    # ==============================
+
     if model == "gpt":
         url = os.getenv("GPT_URL")
         headers["x-rapidapi-host"] = os.getenv("GPT_HOST")
@@ -20,41 +25,98 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {
                     "role": "system",
-                    "content": "Always reply in the same language as the input.\n\n"
-                               "Match Hinglish with Hinglish, English with English.\n\n"
+                    "content": (
+                        "You are an advanced AI model named ChatGPT 5.\n\n"
+                        "Always give clear, deep, and structured explanations with proper examples.\n\n"
+                        "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
+                        "- If user writes in English, respond in English\n"
+                        "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
+                        "- NEVER respond in Devanagari (Hindi) script\n\n"
+                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n\n"
+                        "Respond as if explaining to a beginner clearly and completely.\n\n"
+                    )
                 },
                 {"role": "user", "content": prompt}
             ],
-            "web_access": False
+            "web_access": False,
+            "max_tokens": 2048,
+            "temperature": 0.8
         }
-        return url, headers, payload, None  # no query params
+        return url, headers, payload, None
+
+    # ==============================
+    # ✅ GEMINI (Fixed Language Handling)
+    # ==============================
 
     if model == "gemini":
-        url = os.getenv("GEMINI_URL")
-        headers["x-rapidapi-host"] = os.getenv("GEMINI_HOST")
-        payload = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": "Always reply in the same language as the input.\n\n"
-                                       "Match Hinglish with Hinglish, English with English.\n\n"
-                                    + prompt}]
+        api_key = os.getenv("GEMINI_KEY")
+        if not api_key:
+            raise ValueError("❌ GEMINI_KEY not found in .env file")
+
+        client = genai.Client(api_key=api_key)
+
+        try:
+            # ✅ Strong language instruction for Gemini
+            instruction = (
+                "You are Gemini 2.5 Flash, an advanced AI assistant.\n\n"
+                "🔴 CRITICAL LANGUAGE RULE:\n"
+                "- Carefully detect the language of the user's input\n"
+                "- Respond in EXACTLY THE SAME LANGUAGE as the user\n"
+                "- If user writes in English → respond in English\n"
+                "- If user writes in Hinglish (Hindi using Roman/English script) → respond in Hinglish\n"
+                "- NEVER use Devanagari (हिंदी) script\n"
+                "- NEVER translate the user's language\n\n"
+                "Always give clear, deep, and structured explanations with proper examples.\n"
+                "Avoid unnecessary markdown, but provide proper spacing and line breaks especially in code.\n"
+                "Respond as if explaining to a beginner clearly and completely.\n\n"
+                f"User's question: {prompt}"
+            )
+
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=instruction,
+                config={
+                    "max_output_tokens": 2048,
+                    "temperature": 0.7
                 }
-            ]
-        }
-        querystring = {"key": os.getenv("GEMINI_API_KEY")}
-        return url, headers, payload, querystring
+            )
+
+            # Handle empty response safely
+            text = getattr(response, "text", "").strip() or "[No response from Gemini]"
+            return None, None, {"response_text": text}, None
+
+        except Exception as e:
+            return None, None, {"error": str(e)}, None
+
+    # ==============================
+    # PERPLEXITY
+    # ==============================
 
     if model == "perplexity":
         url = os.getenv("PERPLEXITY_URL")
         headers["x-rapidapi-host"] = os.getenv("PERPLEXITY_HOST")
+
         payload = {
-            "content": "Always reply in the same language as input.\n\n"
-                       "Match Hinglish with Hinglish, English with English.\n\n"
-                        + prompt
+            "content": (
+                "You are an advanced AI model named Perplexity Sonar Reasoning Pro.\n\n"
+                "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
+                "- If user writes in English, respond in English\n"
+                "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
+                "- NEVER respond in Devanagari (Hindi) script\n\n"
+                "Always give long, detailed, and deeply explained answers with examples where possible.\n"
+                "Avoid unnecessary formatting or markdown symbols, but provide proper spacing and line breaks especially in codes.\n"
+                "Explain concepts like a teacher explaining to a beginner.\n\n"
+                + prompt
+            ),
+            "max_tokens": 2048,
+            "temperature": 0.8
         }
+
         return url, headers, payload, None
 
+    # ==============================
+    # DEEPSEEK
+    # ==============================
 
     if model == "deepseek":
         url = os.getenv("DEEPSEEK_URL")
@@ -69,19 +131,31 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {
                     "role": "system",
-                    "content": "Always reply in the same language as the input.\n\n"
-                               "Match Hinglish with Hinglish, English with English.\n\n"
-                               "Keep responses short, simple, and only as detailed as the user asks."
+                    "content": (
+                        "You are an advanced AI model named DeepSeek V3.\n\n"
+                        "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
+                        "- If user writes in English, respond in English\n"
+                        "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
+                        "- NEVER respond in Devanagari (Hindi) script\n\n"
+                        "Always give long, detailed, and deeply explained answers with examples where possible.\n"
+                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n"
+                        "Explain concepts like a teacher explaining to a beginner.\n\n"
+                    )
                 },
-                {"role": "user", "content": prompt}
+                {
+                    "role": "user",
+                    "content": prompt
+                }
             ],
             "max_tokens": 2048,
-            "temperature": 0.7
+            "temperature": 0.8
         }
         return url, headers, payload, None
 
-
-
+    # ==============================
+    # DEFAULT (GPT fallback)
+    # ==============================
+    
     return (
         os.getenv("GPT_URL"),
         {**headers, "x-rapidapi-host": os.getenv("GPT_HOST")},
@@ -89,8 +163,16 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
             "messages": [
                 {
                     "role": "system",
-                    "content": "Always reply in the same language as the input. "
-                               "Match Hinglish with Hinglish, English with English.\n\n"
+                    "content": (
+                        "You are an advanced AI model named ChatGPT 5.\n\n"
+                        "Always give clear, deep, and structured explanations with proper examples.\n\n"
+                        "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
+                        "- If user writes in English, respond in English\n"
+                        "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
+                        "- NEVER respond in Devanagari (Hindi) script\n\n"
+                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n\n"
+                        "Respond as if explaining to a beginner clearly and completely.\n\n"
+                    )
                 },
                 {"role": "user", "content": prompt}
             ],
