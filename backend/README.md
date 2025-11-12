@@ -12,9 +12,6 @@ npm run dev
 
 2. **Add your RapidAPI credentials** in `.env`:
    \`\`\`env
-   RAPIDAPI_KEY=your_actual_rapidapi_key_here
-   GPT_URL=https://chatgpt-42.p.rapidapi.com/gpt4
-   GPT_HOST=chatgpt-42.p.rapidapi.com
    FRONTEND_ORIGIN=http://localhost:5173
    FRONTEND_PUBLIC_URL=http://localhost:5173
    \`\`\`

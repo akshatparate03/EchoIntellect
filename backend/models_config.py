@@ -17,7 +17,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # GPT
     # ==============================
-
     if model == "gpt":
         url = os.getenv("GPT_URL")
         headers["x-rapidapi-host"] = os.getenv("GPT_HOST")
@@ -32,7 +31,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "- If user writes in English, respond in English\n"
                         "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
                         "- NEVER respond in Devanagari (Hindi) script\n\n"
-                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n\n"
+                        "Provide proper spacing and line breaks in responses specially in codes.\n\n"
                         "Respond as if explaining to a beginner clearly and completely.\n\n"
                     )
                 },
@@ -47,7 +46,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # ✅ GEMINI (Fixed Language Handling)
     # ==============================
-
     if model == "gemini":
         api_key = os.getenv("GEMINI_KEY")
         if not api_key:
@@ -56,7 +54,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         client = genai.Client(api_key=api_key)
 
         try:
-            # ✅ Strong language instruction for Gemini
             instruction = (
                 "You are Gemini 2.5 Flash, an advanced AI assistant.\n\n"
                 "🔴 CRITICAL LANGUAGE RULE:\n"
@@ -67,7 +64,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                 "- NEVER use Devanagari (हिंदी) script\n"
                 "- NEVER translate the user's language\n\n"
                 "Always give clear, deep, and structured explanations with proper examples.\n"
-                "Avoid unnecessary markdown, but provide proper spacing and line breaks especially in code.\n"
+                "Provide proper spacing and line breaks in responses specially in codes.\n"
                 "Respond as if explaining to a beginner clearly and completely.\n\n"
                 f"User's question: {prompt}"
             )
@@ -81,7 +78,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                 }
             )
 
-            # Handle empty response safely
             text = getattr(response, "text", "").strip() or "[No response from Gemini]"
             return None, None, {"response_text": text}, None
 
@@ -91,7 +87,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # PERPLEXITY
     # ==============================
-
     if model == "perplexity":
         url = os.getenv("PERPLEXITY_URL")
         headers["x-rapidapi-host"] = os.getenv("PERPLEXITY_HOST")
@@ -104,7 +99,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                 "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
                 "- NEVER respond in Devanagari (Hindi) script\n\n"
                 "Always give long, detailed, and deeply explained answers with examples where possible.\n"
-                "Avoid unnecessary formatting or markdown symbols, but provide proper spacing and line breaks especially in codes.\n"
+                "Provide proper spacing and line breaks in responses specially in codes.\n"
                 "Explain concepts like a teacher explaining to a beginner.\n\n"
                 + prompt
             ),
@@ -117,7 +112,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # DEEPSEEK
     # ==============================
-
     if model == "deepseek":
         url = os.getenv("DEEPSEEK_URL")
         headers = {
@@ -138,7 +132,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
                         "- NEVER respond in Devanagari (Hindi) script\n\n"
                         "Always give long, detailed, and deeply explained answers with examples where possible.\n"
-                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n"
+                        "Provide proper spacing and line breaks in responses specially in codes.\n"
                         "Explain concepts like a teacher explaining to a beginner.\n\n"
                     )
                 },
@@ -155,7 +149,6 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # DEFAULT (GPT fallback)
     # ==============================
-    
     return (
         os.getenv("GPT_URL"),
         {**headers, "x-rapidapi-host": os.getenv("GPT_HOST")},
@@ -170,7 +163,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "- If user writes in English, respond in English\n"
                         "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
                         "- NEVER respond in Devanagari (Hindi) script\n\n"
-                        "Avoid unnecessary formatting or markdown symbols, but provide proper spacing line breaks especially in codes.\n\n"
+                        "Provide proper spacing and line breaks in responses specially in codes.\n\n"
                         "Respond as if explaining to a beginner clearly and completely.\n\n"
                     )
                 },

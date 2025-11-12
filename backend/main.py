@@ -78,36 +78,29 @@ def format_response(answer: str) -> str:
     if not answer:
         return ""
 
-    # --- Normalize escaped characters ---
     answer = (
         answer
-        .replace("\\\\n", "\n")   # Convert double-escaped newline first
-        .replace("\\n", "\n")     # Then convert single-escaped newline
-        .replace("\\t", "    ")   # Tabs to spaces
+        .replace("\\\\n", "\n")
+        .replace("\\n", "\n")
+        .replace("\\t", "    ")
     )
 
-    # --- Normalize Markdown-style formatting ---
-    answer = re.sub(r"```(\w+)?", "\n", answer)  # Remove ``` markers cleanly
-    answer = re.sub(r"\*{1,2}", "", answer)      # Remove * or ** around text
-    answer = re.sub(r"_+", "", answer)           # Remove underscores
-    answer = re.sub(r"`+", "", answer)           # Remove inline code ticks
+    answer = re.sub(r"```(\w+)?", "\n", answer)
+    answer = re.sub(r"\*{1,2}", "", answer)
+    answer = re.sub(r"_+", "", answer)          
+    answer = re.sub(r"`+", "", answer)           
 
-    # --- Fix line density ---
-    # Add paragraph breaks after sentences that are smashed together
     answer = re.sub(r"([a-z0-9\)])([A-Z])", r"\1\n\n\2", answer)
 
-    # --- Remove excessive or missing newlines ---
-    answer = re.sub(r"\n{3,}", "\n\n", answer)  # Too many → just two
-    answer = re.sub(r"[ \t]+\n", "\n", answer)  # Trim spaces before newline
+    answer = re.sub(r"\n{3,}", "\n\n", answer)
+    answer = re.sub(r"[ \t]+\n", "\n", answer)
 
-    # --- Clean bullet points ---
     answer = re.sub(r"•", "-", answer)
-    answer = re.sub(r"(?<!\n)\s*-\s+", "\n- ", answer)  # Force bullet points on new line
+    answer = re.sub(r"(?<!\n)\s*-\s+", "\n- ", answer)
 
-    # --- Final polish ---
-    answer = re.sub(r"\s{2,}", " ", answer)  # Remove double spaces
-    answer = re.sub(r" +\n", "\n", answer)   # Trim right-side spaces
-    answer = re.sub(r"\n{2,}\s*-\s", "\n- ", answer)  # Fix bullet alignment
+    answer = re.sub(r"\s{2,}", " ", answer)
+    answer = re.sub(r" +\n", "\n", answer)
+    answer = re.sub(r"\n{2,}\s*-\s", "\n- ", answer)
 
     return answer.strip()
 
@@ -129,7 +122,6 @@ def ask(body: AskBody):
         try:
             client = genai.Client(api_key=api_key)
             
-            # ✅ Better instruction
             instruction = (
                 "You are Gemini 2.5 Flash.\n\n"
                 "🔴 CRITICAL: Respond in THE SAME LANGUAGE as the user's input.\n"
@@ -148,7 +140,6 @@ def ask(body: AskBody):
         except Exception as e:
             return {"text": f"[EXCEPTION - GEMINI] {str(e)}"}
 
-    # --- Other Models (RapidAPI) ---
     url, headers, payload, querystring = build_request(body.model, body.prompt, rapidapi_key)
 
     try:
@@ -189,7 +180,6 @@ def ask(body: AskBody):
                 if not answer:
                     answer = str(data)
 
-                # ✅ Clean & format
                 answer = format_response(enforce_model_identity(clean_text(answer)))
 
                 if len(answer.strip()) < 150:
