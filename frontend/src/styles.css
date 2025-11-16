@@ -1,102 +1,213 @@
-/* Tailwind v4 base + design tokens + small utilities */
 @import "tailwindcss";
 
+/* ==========================
+   Global Variables & Theme
+========================== */
 :root {
-  /* 3-5 colors total: primary + neutrals + 1 accent */
-  --color-bg: #0b0f14; /* near-black */
-  --color-fg: #e6e8ec; /* light gray */
-  --color-muted: #8a94a6; /* slate gray */
-  --color-primary: #0ea5a5; /* teal */
-  --color-accent: #f59e0b; /* amber (limited use) */
+  --color-bg: #0b0f14;
+  --color-fg: #e6e8ec;
+  --color-muted: #8a94a6;
+  --color-primary: #0ea5a5;
+  --color-accent: #f59e0b;
 
-  /* Diff highlight tints */
   --diff-red: rgba(239, 68, 68, 0.18);
   --diff-blue: rgba(59, 130, 246, 0.18);
   --diff-green: rgba(34, 197, 94, 0.18);
   --diff-yellow: rgba(234, 179, 8, 0.18);
+
+  --header-height: 4rem;
+  --footer-height: 4rem;
 }
 
+/* ==========================
+   Base Layout - Default Scrollable
+========================== */
 html,
-body,
-#root {
-  height: 100%;
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  overflow-x: hidden; /* Only hide horizontal scroll */
+  overflow-y: auto; /* Allow vertical scroll by default */
 }
 
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================
+   Fixed Layout for Home & Contact Only
+========================== */
+body.no-scroll {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body.no-scroll #root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ==========================
+   Main Content Area
+========================== */
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
+/* Scrollable pages (About, etc.) */
+.scrollable-page {
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Fixed pages (Home, Contact) */
+.fixed-page {
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ==========================
+   Header & Footer
+========================== */
+header,
+footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 50;
+}
+
+header {
+  top: 0;
+  height: var(--header-height);
+  background: #0f1620;
+  border-bottom: 1px solid #1b2636;
+}
+
+footer {
+  bottom: 0;
+  height: var(--footer-height);
+  background: #0f1620;
+  border-top: 1px solid #1b2636;
+}
+
+/* ==========================
+   Prevent flicker on route change
+========================== */
+.fade-enter,
+.fade-exit {
+  transition: opacity 0.25s ease-in-out;
+}
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+}
+
+/* ==========================
+   Base Colors
+========================== */
 .bg-app {
   background-color: var(--color-bg);
 }
+
 .text-fg {
   color: var(--color-fg);
 }
+
 .text-muted {
   color: var(--color-muted);
 }
+
 .bg-panel {
   background-color: #0f1620;
 }
+
 .border-panel {
   border-color: #1b2636;
 }
+
+/* ==========================
+   Buttons
+========================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.375rem; /* rounded-md */
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem; /* px-4 */
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem; /* py-2 */
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
+
 .btn-primary {
   background: var(--color-primary);
   color: #031314;
-  .input {
-    width: 100%;
-    border-radius: 0.375rem; /* rounded-md */
-    padding-left: 1rem; /* px-4 */
-    padding-right: 1rem; /* px-4 */
-    padding-top: 0.75rem; /* py-3 */
-    padding-bottom: 0.75rem; /* py-3 */
-    background: #0c1118;
-    color: var(--color-fg);
-    outline: none;
-    border: 1px solid #1b2636; /* border-panel */
-  }
-  .label {
-    display: block;
-    font-size: 0.875rem; /* text-sm */
-    margin-bottom: 0.25rem; /* mb-1 */
-    color: var(--color-muted);
-  }
-  color: var(--color-fg);
   border: 1px solid var(--color-primary);
 }
+
+.btn-primary:hover {
+  background: #0b8a8a;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-fg);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-primary);
+}
+
+/* ==========================
+   Inputs
+========================== */
 .input {
   width: 100%;
-  border-radius: 0.375rem; /* rounded-md */
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem; /* px-4 */
-  padding-top: 0.75rem; /* py-3 */
-  padding-bottom: 0.75rem; /* py-3 */
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
   background: #0c1118;
   color: var(--color-fg);
   outline: none;
-  border: 1px solid #1b2636; /* border-panel */
+  border: 1px solid #1b2636;
+  transition: border-color 0.2s ease;
 }
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
 .label {
   display: block;
-  font-size: 0.875rem; /* text-sm */
-  margin-bottom: 0.25rem; /* mb-1 */
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
   color: var(--color-muted);
 }
 
-/* Dots loader */
+/* ==========================
+   Dots Loader
+========================== */
 .dots::after {
   content: "…";
   animation: dots steps(1, end) 1.2s infinite;
 }
+
 @keyframes dots {
   0% {
     content: "";
@@ -112,12 +223,16 @@ body,
   }
 }
 
-/* Sliding panel for auth */
+/* ==========================
+   Auth Sliding Panel
+========================== */
 .auth-slider {
   transition: transform 400ms ease;
 }
 
-/* Highlight classes */
+/* ==========================
+   Highlight Markers
+========================== */
 .mark-red {
   background: var(--diff-red);
 }
@@ -129,4 +244,200 @@ body,
 }
 .mark-yellow {
   background: var(--diff-yellow);
+}
+
+/* ==========================
+   Toast Animation
+========================== */
+@keyframes slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* ==========================
+   Cursor Pointer Fix
+========================== */
+button,
+a,
+[role="button"],
+.btn,
+input[type="submit"],
+input[type="button"],
+[onclick] {
+  cursor: pointer !important;
+}
+
+/* ==========================
+   Custom AI Gradient + Grid
+========================== */
+.bg-ai-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(at 30% 20%, #1e293b 0%, transparent 60%),
+    radial-gradient(at 70% 80%, #0ea5a5 0%, transparent 60%),
+    radial-gradient(at 50% 50%, #0f172a 0%, transparent 80%);
+  opacity: 0.6;
+  z-index: 0;
+  animation: gradientFade 10s ease-in-out infinite;
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: 0;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+@keyframes gradientFade {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* ==========================
+   Home Page - Perfectly Centered
+========================== */
+.home-page {
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.home-page .hero-content {
+  max-width: 900px;
+  text-align: center;
+  z-index: 10;
+}
+
+/* ==========================
+   Contact Page - Perfectly Centered
+========================== */
+.contact-page {
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.contact-box {
+  background: #0f1620;
+  border: 1px solid #1b2636;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+}
+
+.contact-box h2 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.contact-box p {
+  font-size: 1rem;
+  color: var(--color-muted);
+  margin-bottom: 1.5rem;
+}
+
+.contact-box input,
+.contact-box textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1b2636;
+  background: #0c1118;
+  color: var(--color-fg);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.contact-box input:focus,
+.contact-box textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.contact-box button {
+  background: var(--color-primary);
+  color: #031314;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.contact-box button:hover {
+  background: #0b8a8a;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================
+   About Page - Scrollable Content (Updated for actual structure)
+========================== */
+.about-page {
+  min-height: 100vh;
+  padding-top: 5.5rem;
+  padding-bottom: 5.5rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.about-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 0;
+}
+
+/* Fix for About page with min-h-screen */
+.min-h-screen {
+  min-height: 100vh;
+  padding-top: 5.5rem !important;
+  padding-bottom: 5.5rem !important;
 }

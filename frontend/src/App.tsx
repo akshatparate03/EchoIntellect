@@ -5,10 +5,21 @@ import Footer from "./components/Footer";
 export default function App() {
   const { pathname } = useLocation();
   const hideChrome = pathname === "/login";
+
+  // Routes that use fixed header/footer layout
+  const fixedLayoutRoutes = ["/", "/contact"];
+  const isFixedLayout = fixedLayoutRoutes.includes(pathname);
+
   return (
-    <div className="min-h-dvh bg-app text-fg flex flex-col">
+    <div
+      className={`bg-app text-fg flex flex-col min-h-dvh ${
+        isFixedLayout ? "fixed-layout" : ""
+      }`}
+    >
       {!hideChrome && <Navbar />}
-      <main className="flex-1">{<Outlet />}</main>
+      <main className="main-content flex-1">
+        <Outlet />
+      </main>
       {!hideChrome && <Footer />}
     </div>
   );

@@ -31,20 +31,30 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 min-h-[70dvh] flex flex-col justify-center">
-      <h1 className="text-3xl md:text-4xl font-semibold text-balance mb-6">
-        Ask once. Compare across multiple AI models.
-      </h1>
-      <p className="text-muted mb-6">
-        Dark theme only. Select up to four models to compare.
-      </p>
-      <div className="relative">
-        <PromptInput
-          placeholder="Enter your prompt..."
-          onSubmit={handleSubmit}
-          autoFocus
-        />
+    <div className="relative flex flex-col min-h-screen bg-app text-fg">
+      {/* Background layers */}
+      <div className="bg-grid" />
+      <div className="bg-ai-gradient" />
+
+      {/* Main content area */}
+      <div className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 py-8">
+        <h1 className="text-4xl md:text-5xl font-semibold mb-6 text-balance">
+          Ask once and Learn from many AI minds.
+        </h1>
+        <p className="text-muted mb-8 text-lg">
+          One platform to explore, compare, and learn from advanced AI models
+        </p>
+
+        <div className="relative w-full max-w-2xl mx-auto">
+          <PromptInput
+            placeholder="Enter your prompt..."
+            onSubmit={handleSubmit}
+            autoFocus
+          />
+        </div>
       </div>
+
+      {/* Model selector dialog */}
       <ModelSelectorDialog
         open={open}
         onClose={() => setOpen(false)}

@@ -1,57 +1,57 @@
-import { useRef, useState } from "react";
+"use client";
+import React from "react";
 
 export default function Contact() {
-  const formRef = useRef<HTMLFormElement>(null);
-  const [loading, setLoading] = useState(false);
-  const [ok, setOk] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-
-  const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
-
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setOk(null);
-    setErr(null);
-    const data = new FormData(e.currentTarget);
-    try {
-      if (!APPS_SCRIPT_URL) throw new Error("Apps Script URL not set");
-      await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        body: data,
-        mode: "no-cors",
-      });
-      setOk("Feedback sent!");
-      formRef.current?.reset(); // <-- safe reset
-    } catch (e: any) {
-      setErr(e?.message || "Failed to send");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <h2 className="text-2xl font-semibold mb-4">Send Feedback</h2>
-      <form ref={formRef} onSubmit={submit} className="space-y-4">
-        <div>
-          <label className="label">Name</label>
-          <input className="input" name="name" required />
-        </div>
-        <div>
-          <label className="label">Email</label>
-          <input className="input" type="email" name="email" required />
-        </div>
-        <div>
-          <label className="label">Feedback / Issue</label>
-          <textarea className="input" name="message" rows={5} required />
-        </div>
-        <button className="btn btn-primary" disabled={loading}>
-          {loading ? "Sending..." : "Send"}
-        </button>
-        {ok && <div className="text-green-400">{ok}</div>}
-        {err && <div className="text-red-400">{err}</div>}
-      </form>
-    </div>
+    <section className="relative flex flex-col items-center justify-center min-h-screen bg-app text-fg overflow-hidden">
+      {/* --- Background Layers --- */}
+      <div className="bg-ai-gradient absolute inset-0"></div>
+      <div className="bg-grid absolute inset-0"></div>
+
+      {/* --- Contact Box --- */}
+      <div className="relative z-10 bg-panel/80 border border-panel rounded-2xl shadow-xl p-8 w-[85%] max-w-sm backdrop-blur-md">
+        <h1 className="text-2xl font-semibold mb-6 text-primary text-center">
+          Contact Us
+        </h1>
+
+        <form className="flex flex-col gap-4 text-left">
+          <div>
+            <label className="label">Name</label>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              className="input"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="label">Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="input"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="label">Message</label>
+            <textarea
+              placeholder="Type your message"
+              className="input h-24 resize-none"
+              required
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary mt-4 w-full hover:scale-105 transition-transform duration-200"
+          >
+            Send Message
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }
