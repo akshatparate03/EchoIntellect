@@ -20,6 +20,7 @@ export default function ModelSelectorDialog({
   onConfirm: (models: ModelKey[]) => void;
 }) {
   const [selected, setSelected] = useState<ModelKey[]>([]);
+
   function toggle(k: ModelKey) {
     setSelected((prev) =>
       prev.includes(k)
@@ -29,7 +30,17 @@ export default function ModelSelectorDialog({
         : prev
     );
   }
+
+  function toggleSelectAll() {
+    if (selected.length === ALL.length) {
+      setSelected([]);
+    } else {
+      setSelected(ALL.map((m) => m.key));
+    }
+  }
+
   if (!open) return null;
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-panel border border-panel rounded-lg p-4">
@@ -37,6 +48,16 @@ export default function ModelSelectorDialog({
         <p className="text-sm text-muted mb-4">
           Selection order will define column order.
         </p>
+
+        <div className="mb-4">
+          <button
+            onClick={toggleSelectAll}
+            className="w-full px-3 py-2 rounded border border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium text-sm hover:bg-[var(--color-primary)]/20 transition-colors"
+          >
+            {selected.length === ALL.length ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           {ALL.map((m) => (
             <button
