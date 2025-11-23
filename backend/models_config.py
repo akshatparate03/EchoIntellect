@@ -15,13 +15,20 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     }
 
     # ==============================
+<<<<<<< HEAD
     # GPT (Updated to new model)
+=======
+    # GPT
+>>>>>>> d3dfa7b6d5da9e36760ec0927c030f8edb10ac08
     # ==============================
     if model == "gpt":
         url = os.getenv("GPT_URL")
         headers["x-rapidapi-host"] = os.getenv("GPT_HOST")
         payload = {
+<<<<<<< HEAD
             "model": "GPT-5-mini",
+=======
+>>>>>>> d3dfa7b6d5da9e36760ec0927c030f8edb10ac08
             "messages": [
                 {
                     "role": "system",
@@ -37,7 +44,14 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                     )
                 },
                 {"role": "user", "content": prompt}
+<<<<<<< HEAD
             ]
+=======
+            ],
+            "web_access": False,
+            "max_tokens": 2048,
+            "temperature": 0.8
+>>>>>>> d3dfa7b6d5da9e36760ec0927c030f8edb10ac08
         }
         return url, headers, payload, None
 
@@ -151,7 +165,10 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         os.getenv("GPT_URL"),
         {**headers, "x-rapidapi-host": os.getenv("GPT_HOST")},
         {
+<<<<<<< HEAD
             "model": "GPT-5-mini",
+=======
+>>>>>>> d3dfa7b6d5da9e36760ec0927c030f8edb10ac08
             "messages": [
                 {
                     "role": "system",
@@ -167,7 +184,12 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                     )
                 },
                 {"role": "user", "content": prompt}
+<<<<<<< HEAD
             ]
+=======
+            ],
+            "web_access": False
+>>>>>>> d3dfa7b6d5da9e36760ec0927c030f8edb10ac08
         },
         None
     )
