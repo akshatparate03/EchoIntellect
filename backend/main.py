@@ -74,7 +74,7 @@ def enforce_model_identity(text: str) -> str:
     return text.strip()
 
 def format_response(answer: str) -> str:
-    """✨ Enhance readability for all models (especially GPT)."""
+    """Enhance readability for all models (especially GPT)."""
     if not answer:
         return ""
 
@@ -124,7 +124,7 @@ def ask(body: AskBody):
             
             instruction = (
                 "You are Gemini 2.5 Flash.\n\n"
-                "🔴 CRITICAL: Respond in THE SAME LANGUAGE as the user's input.\n"
+                "CRITICAL: Respond in THE SAME LANGUAGE as the user's input.\n"
                 "- English input → English output\n"
                 "- Hinglish input → Hinglish output\n"
                 "- NEVER use Devanagari script\n\n"

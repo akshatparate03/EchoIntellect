@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import DotsLoader from "./DotsLoader";
 import TypewriterText from "./TypewriterText";
 import { askModel, createShare, type ModelKey } from "../utils/api";
@@ -12,17 +12,31 @@ export default function ModelPanel({
   initialPrompt,
   onHeaderClick,
   onResponse,
+  existingResponse,
 }: {
   model: ModelKey;
   initialPrompt: string;
   onHeaderClick?: () => void;
   onResponse?: (text: string) => void;
+  existingResponse?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [response, setResponse] = useState<string>("");
+  const [response, setResponse] = useState<string>(existingResponse || "");
 
-  /** ⭐ Model generation logic (no stop button / no abort logic) */
+  // ✅ FIXED: Track if we've already fetched for this prompt to prevent re-fetching
+  const fetchedPromptRef = useRef<string>("");
+  const mountedRef = useRef(false);
+
+  // ✅ FIXED: Update response when existingResponse changes
+  useEffect(() => {
+    if (existingResponse && existingResponse !== response) {
+      setResponse(existingResponse);
+      fetchedPromptRef.current = initialPrompt; // Mark as already fetched
+    }
+  }, [existingResponse]);
+
+  /** Model generation logic */
   async function run(prompt: string) {
     if (getRemainingForToday(model) <= 0) {
       setError("Daily limit reached (15)");
@@ -32,15 +46,13 @@ export default function ModelPanel({
     setLoading(true);
     setError(null);
 
-    if (response.trim() === "") setResponse("");
-
     try {
       const { text } = await askModel(model, prompt);
-      // FIXED: Ensure text is always a clean string, never undefined
       const cleanText = String(text || "").trim();
       setResponse(cleanText);
       incrementUsage(model);
       onResponse?.(cleanText);
+      fetchedPromptRef.current = prompt; // Mark this prompt as fetched
     } catch (error: any) {
       setError(error?.message || "Failed");
     } finally {
@@ -48,13 +60,26 @@ export default function ModelPanel({
     }
   }
 
+  // ✅ FIXED: Load from parent's response prop if available on mount
   useEffect(() => {
-    if (initialPrompt && response === "") {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // ✅ FIXED: Only run if initialPrompt is new and not empty
+  useEffect(() => {
+    if (
+      initialPrompt &&
+      initialPrompt !== fetchedPromptRef.current &&
+      mountedRef.current
+    ) {
       run(initialPrompt);
     }
   }, [initialPrompt]);
 
-  /** ⭐ Smooth displayed body */
+  /** Smooth displayed body */
   const body = useMemo(() => {
     if (loading)
       return (
@@ -111,7 +136,7 @@ export default function ModelPanel({
         {body}
       </div>
 
-      {/* Input Box (no stop button now) */}
+      {/* Input Box */}
       <div className="mt-3">
         <PromptInput
           placeholder={`Ask only ${model.toUpperCase()}... (${getRemainingForToday(

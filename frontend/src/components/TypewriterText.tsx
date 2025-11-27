@@ -14,9 +14,17 @@ export default function TypewriterText({
   const [output, setOutput] = useState("");
   const indexRef = useRef(0);
   const isDoneRef = useRef(false);
+  const textRef = useRef(text);
 
+  // ✅ FIXED: If text hasn't changed, don't re-animate
   useEffect(() => {
-    // Reset on new text
+    // If text is the same as before, just display it instantly
+    if (text === textRef.current && output === text) {
+      return;
+    }
+
+    // New text detected - reset and animate
+    textRef.current = text;
     setOutput("");
     indexRef.current = 0;
     isDoneRef.current = false;
@@ -28,7 +36,6 @@ export default function TypewriterText({
 
       const currentIndex = indexRef.current;
 
-      // FIXED: Check bounds BEFORE accessing text[i]
       if (currentIndex >= text.length) {
         isDoneRef.current = true;
         clearInterval(id);
@@ -37,14 +44,12 @@ export default function TypewriterText({
       }
 
       const char = text[currentIndex];
-      // Only append if char exists (now it always will)
       if (char !== undefined) {
         setOutput((prev) => prev + char);
       }
 
       indexRef.current++;
 
-      // Check again after increment
       if (indexRef.current >= text.length) {
         isDoneRef.current = true;
         clearInterval(id);

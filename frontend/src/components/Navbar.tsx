@@ -13,11 +13,24 @@ export default function Navbar() {
 
   const [showLogoutToast, setShowLogoutToast] = useState(false);
 
+  // ✅ FIXED: Check sessionStorage instead of localStorage
   const [hasComparison, setHasComparison] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("comparisonData");
+    // Check sessionStorage (not localStorage) so it resets on browser close
+    const saved = sessionStorage.getItem("comparisonData");
     setHasComparison(!!saved);
+
+    // Listen for changes in sessionStorage
+    const handleStorageChange = () => {
+      const updated = sessionStorage.getItem("comparisonData");
+      setHasComparison(!!updated);
+    };
+
+    // Check every 100ms for sessionStorage changes (since storage event doesn't work for same tab)
+    const interval = setInterval(handleStorageChange, 100);
+
+    return () => clearInterval(interval);
   }, [pathname]);
 
   const handleLogout = () => {
@@ -72,7 +85,7 @@ export default function Navbar() {
               Contact
             </Link>
 
-            {/* ⭐ Show Compare tab ONLY if comparison data exists */}
+            {/* ✅ Show Compare tab ONLY if comparison data exists in sessionStorage */}
             {hasComparison && (
               <Link
                 to="/compare"

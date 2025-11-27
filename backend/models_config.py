@@ -47,14 +47,14 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     if model == "gemini":
         api_key = os.getenv("GEMINI_KEY")
         if not api_key:
-            raise ValueError("❌ GEMINI_KEY not found in .env file")
+            raise ValueError("GEMINI_KEY not found in .env file")
 
         client = genai.Client(api_key=api_key)
 
         try:
             instruction = (
-                "You are Gemini 2.5 Flash, an advanced AI assistant.\n\n"
-                "🔴 CRITICAL LANGUAGE RULE:\n"
+                "You are Gemini 3, an advanced AI assistant.\n\n"
+                "CRITICAL LANGUAGE RULE:\n"
                 "- Carefully detect the language of the user's input\n"
                 "- Respond in EXACTLY THE SAME LANGUAGE as the user\n"
                 "- If user writes in English → respond in English\n"
