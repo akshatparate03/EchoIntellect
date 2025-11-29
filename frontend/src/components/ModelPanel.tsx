@@ -23,15 +23,18 @@ export default function ModelPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<string>(existingResponse || "");
+  const [shouldAnimate, setShouldAnimate] = useState(false); // ✅ Track if we should animate
 
   // ✅ FIXED: Track if we've already fetched for this prompt to prevent re-fetching
   const fetchedPromptRef = useRef<string>("");
   const mountedRef = useRef(false);
 
-  // ✅ FIXED: Update response when existingResponse changes
+  // ✅ FIXED: Update response when existingResponse changes (without re-typing)
   useEffect(() => {
-    if (existingResponse && existingResponse !== response) {
+    if (existingResponse && !response) {
+      // Only set if we don't have a response yet
       setResponse(existingResponse);
+      setShouldAnimate(false); // Don't animate existing response
       fetchedPromptRef.current = initialPrompt; // Mark as already fetched
     }
   }, [existingResponse]);
@@ -45,6 +48,7 @@ export default function ModelPanel({
 
     setLoading(true);
     setError(null);
+    setShouldAnimate(true); // ✅ Enable animation for new response
 
     try {
       const { text } = await askModel(model, prompt);
@@ -55,6 +59,7 @@ export default function ModelPanel({
       fetchedPromptRef.current = prompt; // Mark this prompt as fetched
     } catch (error: any) {
       setError(error?.message || "Failed");
+      setShouldAnimate(false);
     } finally {
       setLoading(false);
     }
@@ -92,8 +97,13 @@ export default function ModelPanel({
     if (!response)
       return <div className="text-muted text-sm">No response yet.</div>;
 
-    return <TypewriterText text={response} />;
-  }, [loading, error, response]);
+    // ✅ FIXED: Only animate when shouldAnimate is true (new response)
+    return shouldAnimate ? (
+      <TypewriterText text={response} onDone={() => setShouldAnimate(false)} />
+    ) : (
+      <div className="whitespace-pre-wrap leading-relaxed">{response}</div>
+    );
+  }, [loading, error, response, shouldAnimate]);
 
   return (
     <section className="bg-panel/80 border border-panel rounded-xl p-4 flex flex-col h-[500px] backdrop-blur-md shadow-lg">
