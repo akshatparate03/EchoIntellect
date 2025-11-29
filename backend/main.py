@@ -147,9 +147,9 @@ def ask(body: AskBody):
             return {"text": "[ERROR] Invalid or missing URL"}
 
         if querystring:
-            r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=300)
+            r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=500)
         else:
-            r = requests.post(url, json=payload, headers=headers, timeout=300)
+            r = requests.post(url, json=payload, headers=headers, timeout=500)
 
         r.raise_for_status()
         data = r.json()
