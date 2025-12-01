@@ -47,21 +47,21 @@ export default function Footer() {
             </svg>
           </a>
 
-          {/* GitHub */}
+          {/* X */}
           <a
-            href="#"
+            href="https://x.com/EchoIntellectAI"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub"
+            aria-label="X"
             className="transition-transform transform hover:scale-110 hover:text-[var(--color-primary)] duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
               viewBox="0 0 24 24"
+              fill="currentColor"
               className="w-6 h-6"
             >
-              <path d="M12 .5C5.7.5.5 5.7.5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.6v-2.1c-3.2.7-3.9-1.5-3.9-1.5-.5-1.2-1.2-1.5-1.2-1.5-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 .1 1.5-.7 1.7-1.1.1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.9 0-1.3.4-2.4 1.1-3.3-.1-.3-.5-1.6.1-3.3 0 0 .9-.3 3.4 1.1a12 12 0 0 1 6.2 0c2.5-1.4 3.4-1.1 3.4-1.1.6 1.7.2 3 .1 3.3.7.9 1.1 2 1.1 3.3 0 4.6-2.7 5.6-5.3 5.9.4.3.8 1 .8 2v3c0 .4.2.7.8.6A11.5 11.5 0 0 0 23.5 12C23.5 5.7 18.3.5 12 .5z" />
+              <path d="M18.244 2.25h3.308l-7.227 8.26L22.5 21.75h-6.843l-4.42-5.953-5.053 5.953H2.876l7.73-9.1L1.5 2.25h6.976l3.998 5.332 4.77-5.332zm-1.157 17.114h1.833L7.08 4.136H5.164l11.923 15.228z" />
             </svg>
           </a>
         </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ModelKey } from "../utils/api";
 
 const ALL: { key: ModelKey; label: string }[] = [
-  { key: "gpt", label: "GPT" },
+  { key: "gpt", label: "ChatGPT" },
   { key: "gemini", label: "Gemini" },
   { key: "perplexity", label: "Perplexity" },
   { key: "deepseek", label: "DeepSeek" },

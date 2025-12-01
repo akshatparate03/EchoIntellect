@@ -182,9 +182,6 @@ def ask(body: AskBody):
 
                 answer = format_response(enforce_model_identity(clean_text(answer)))
 
-                if len(answer.strip()) < 150:
-                    answer += "\n\n[Note: The response seems short — try regenerating for more detail.]"
-
                 return {"text": answer}
 
             except Exception as e:

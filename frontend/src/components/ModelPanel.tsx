@@ -111,7 +111,6 @@ export default function ModelPanel({
       <div className="flex items-center justify-between">
         <button onClick={onHeaderClick} className="text-left">
           <div className="text-sm text-muted">{model.toUpperCase()}</div>
-          <div className="text-lg font-semibold">Model: {model}</div>
         </button>
 
         <div className="flex items-center gap-2">
@@ -149,7 +148,7 @@ export default function ModelPanel({
       {/* Input Box */}
       <div className="mt-3">
         <PromptInput
-          placeholder={`Ask only ${model.toUpperCase()}... (${getRemainingForToday(
+          placeholder={`${model.toUpperCase()}... (${getRemainingForToday(
             model
           )} left today)`}
           onSubmit={(v) => run(v)}

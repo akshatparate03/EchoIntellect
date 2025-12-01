@@ -118,7 +118,7 @@ export default function ShareView() {
 
           {/* Button */}
           <div className="pt-2 flex justify-center">
-            <Link to="/login" className="btn btn-primary">
+            <Link to="/" className="btn btn-primary">
               Try yourself
             </Link>
           </div>

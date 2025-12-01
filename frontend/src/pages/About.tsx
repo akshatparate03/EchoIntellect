@@ -50,7 +50,7 @@ export default function About() {
                 Live Response Experience:
               </span>{" "}
               <span className="text-muted">
-                Typing animations and activity indicators for visual clarity.
+                Typing animations and real-time response cues for better interaction.
               </span>
             </li>
             <li className="bg-[#0f1620] border border-panel rounded-lg px-4 py-2">
