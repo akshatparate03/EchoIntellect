@@ -72,16 +72,21 @@ export default function Login() {
   }, [toastVisible]);
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden text-fg">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="bg-grid" />
-        <div className="bg-ai-gradient" />
-      </div>
+    <div
+      className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden text-white"
+      style={{
+        backgroundImage: `url('/Images/LoginBG.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/60 -z-10" />
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-gray-900/50 backdrop-blur-xl border border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20">
+      <div className="relative z-10 w-full max-w-md px-4">
+        <div className="bg-gray-900/70 backdrop-blur-xl border border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20">
           <div className="p-10">
             <div className="mb-10 text-center">
               <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-3">
@@ -107,7 +112,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
               </div>
 
@@ -122,7 +127,7 @@ export default function Login() {
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
               </div>
 
@@ -134,7 +139,7 @@ export default function Login() {
 
               <button
                 disabled={isLoading}
-                className="w-full px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl disabled:opacity-50"
+                className="w-full px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl disabled:opacity-50 hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/30"
               >
                 {isLoading
                   ? mode === "signin"
@@ -154,7 +159,7 @@ export default function Login() {
               <button
                 onClick={switchMode}
                 disabled={isLoading}
-                className="px-6 py-2 rounded-lg text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/15"
+                className="px-6 py-2 rounded-lg text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/15 transition-all duration-200 disabled:opacity-50"
               >
                 {mode === "signin" ? "Create account" : "Go to sign in"}
               </button>
@@ -169,6 +174,26 @@ export default function Login() {
         message={toastMessage}
         onClose={() => setToastVisible(false)}
       />
+
+      <style>{`
+        /* Remove scrollbar completely */
+        html, body {
+          overflow: hidden !important;
+          height: 100vh;
+          width: 100vw;
+          margin: 0;
+          padding: 0;
+        }
+        
+        ::-webkit-scrollbar {
+          display: none !important;
+        }
+        
+        * {
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
+        }
+      `}</style>
     </div>
   );
 }

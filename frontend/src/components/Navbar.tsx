@@ -48,7 +48,7 @@ export default function Navbar() {
             <img
               src="/Images/EchoIntellect.png"
               alt="EchoIntellect"
-              className="h-14 w-auto object-contain drop-shadow-lg select-none"
+              className="h-11 w-auto object-contain drop-shadow-lg select-none"
             />
             <div className="leading-tight">
               <div className="font-semibold text-white">EchoIntellect</div>
