@@ -42,7 +42,6 @@ export default function Login() {
 
     try {
       let res;
-
       if (mode === "signin") {
         res = await signIn(email, pass);
         showToast(res?.message || "Logged in successfully!");
@@ -75,7 +74,7 @@ export default function Login() {
     <div
       className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden text-white"
       style={{
-        backgroundImage: `url('/Images/LoginBG.jpg')`,
+        backgroundImage: "url('/Images/LoginBG.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -85,11 +84,11 @@ export default function Login() {
       <div className="absolute inset-0 bg-black/60 -z-10" />
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        <div className="bg-gray-900/70 backdrop-blur-xl border border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20">
-          <div className="p-10">
-            <div className="mb-10 text-center">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-3">
+      <div className="relative z-10 w-full max-w-sm px-4">
+        <div className="bg-white/4 backdrop-blur-md border border-white/30 rounded-3xl shadow-2xl shadow-emerald-500/20">
+          <div className="p-6">
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
                 {headline}
               </h2>
               <p className="text-gray-300 text-sm">
@@ -100,8 +99,8 @@ export default function Login() {
             </div>
 
             {/* Form */}
-            <form onSubmit={submit} className="space-y-6">
-              <div className="space-y-2">
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-100">
                   Email
                 </label>
@@ -112,11 +111,11 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/40 border border-emerald-500/30 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-100">
                   Password
                 </label>
@@ -127,19 +126,19 @@ export default function Login() {
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-5 py-3 bg-gray-800/40 border border-emerald-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/40 border border-emerald-500/30 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
               </div>
 
               {error && (
-                <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                <div className="px-4 py-2.5 bg-red-500/10 border border-red-500/30 rounded-md text-red-400 text-sm">
                   {error}
                 </div>
               )}
 
               <button
                 disabled={isLoading}
-                className="w-full px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl disabled:opacity-50 hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/30"
+                className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-md disabled:opacity-50 hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/30"
               >
                 {isLoading
                   ? mode === "signin"
@@ -152,14 +151,14 @@ export default function Login() {
             </form>
 
             {/* Toggle */}
-            <div className="mt-8 pt-6 border-t border-gray-700/50 text-center">
-              <p className="text-gray-300 text-sm mb-3">
+            <div className="mt-4 pt-3 border-t border-gray-700/50 text-center">
+              <p className="text-gray-300 text-xs mb-1.5">
                 {mode === "signin" ? "New here?" : "Already have an account?"}
               </p>
               <button
                 onClick={switchMode}
                 disabled={isLoading}
-                className="px-6 py-2 rounded-lg text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/15 transition-all duration-200 disabled:opacity-50"
+                className="px-5 py-1.5 text-sm rounded-md text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/15 transition-all duration-200 disabled:opacity-50"
               >
                 {mode === "signin" ? "Create account" : "Go to sign in"}
               </button>
@@ -184,11 +183,9 @@ export default function Login() {
           margin: 0;
           padding: 0;
         }
-        
         ::-webkit-scrollbar {
           display: none !important;
         }
-        
         * {
           -ms-overflow-style: none !important;
           scrollbar-width: none !important;
