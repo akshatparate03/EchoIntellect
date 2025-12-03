@@ -19,7 +19,14 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     if model == "gpt":
         url = os.getenv("GPT_URL")
-        headers["x-rapidapi-host"] = os.getenv("GPT_HOST")
+        host = os.getenv("GPT_HOST")
+        
+        if not url:
+            raise ValueError("GPT_URL environment variable missing")
+        if not host:
+            raise ValueError("GPT_HOST environment variable missing")
+        
+        headers["x-rapidapi-host"] = host
         payload = {
             "model": "GPT-5-mini",
             "messages": [
@@ -49,9 +56,9 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         if not api_key:
             raise ValueError("GEMINI_KEY not found in .env file")
 
-        client = genai.Client(api_key=api_key)
-
         try:
+            client = genai.Client(api_key=api_key)
+
             instruction = (
                 "You are Gemini 3, an advanced AI assistant.\n\n"
                 "CRITICAL LANGUAGE RULE:\n"
@@ -76,7 +83,11 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                 }
             )
 
-            text = getattr(response, "text", "").strip() or "[No response from Gemini]"
+            text = getattr(response, "text", "").strip()
+            
+            if not text:
+                return None, None, {"error": "No response from Gemini"}, None
+            
             return None, None, {"response_text": text}, None
 
         except Exception as e:
@@ -87,7 +98,14 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     if model == "perplexity":
         url = os.getenv("PERPLEXITY_URL")
-        headers["x-rapidapi-host"] = os.getenv("PERPLEXITY_HOST")
+        host = os.getenv("PERPLEXITY_HOST")
+        
+        if not url:
+            raise ValueError("PERPLEXITY_URL environment variable missing")
+        if not host:
+            raise ValueError("PERPLEXITY_HOST environment variable missing")
+        
+        headers["x-rapidapi-host"] = host
 
         payload = {
             "content": (
@@ -112,9 +130,16 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     if model == "deepseek":
         url = os.getenv("DEEPSEEK_URL")
+        host = os.getenv("DEEPSEEK_HOST")
+        
+        if not url:
+            raise ValueError("DEEPSEEK_URL environment variable missing")
+        if not host:
+            raise ValueError("DEEPSEEK_HOST environment variable missing")
+        
         headers = {
             "x-rapidapi-key": rapidapi_key,
-            "x-rapidapi-host": os.getenv("DEEPSEEK_HOST"),
+            "x-rapidapi-host": host,
             "Content-Type": "application/json"
         }
 
@@ -147,9 +172,17 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
     # ==============================
     # DEFAULT (GPT fallback)
     # ==============================
+    url = os.getenv("GPT_URL")
+    host = os.getenv("GPT_HOST")
+    
+    if not url:
+        raise ValueError("GPT_URL environment variable missing (default fallback)")
+    if not host:
+        raise ValueError("GPT_HOST environment variable missing (default fallback)")
+    
     return (
-        os.getenv("GPT_URL"),
-        {**headers, "x-rapidapi-host": os.getenv("GPT_HOST")},
+        url,
+        {**headers, "x-rapidapi-host": host},
         {
             "model": "GPT-5-mini",
             "messages": [

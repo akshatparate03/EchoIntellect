@@ -6,6 +6,8 @@ from typing import Dict
 from models_config import build_request
 from dotenv import load_dotenv
 from google import genai
+from error_handler import get_error_message, handle_api_exception, handle_model_specific_error
+
 load_dotenv()
 
 app = FastAPI(title="EchoIntellect Backend", version="0.2.1")
@@ -117,7 +119,7 @@ def ask(body: AskBody):
     if body.model.lower() == "gemini":
         api_key = os.getenv("GEMINI_KEY")
         if not api_key:
-            return {"text": "[ERROR] GEMINI_KEY missing in .env"}
+            return handle_model_specific_error("Gemini", "api_key_missing")
 
         try:
             client = genai.Client(api_key=api_key)
@@ -135,23 +137,56 @@ def ask(body: AskBody):
                 model="gemini-2.5-flash",
                 contents=instruction
             )
-            answer = getattr(response, "text", "[No response]").strip()
+            answer = getattr(response, "text", "").strip()
+            
+            if not answer:
+                return handle_model_specific_error("Gemini", "no_response")
+            
             return {"text": format_response(clean_text(answer))}
+            
+        except requests.exceptions.Timeout:
+            return get_error_message(504, "Gemini")
+        except requests.exceptions.ConnectionError:
+            return get_error_message(503, "Gemini")
         except Exception as e:
-            return {"text": f"[EXCEPTION - GEMINI] {str(e)}"}
+            error_str = str(e).lower()
+            
+            # Check for quota/rate limit errors
+            if "quota" in error_str or "rate limit" in error_str or "429" in error_str:
+                return get_error_message(429, "Gemini")
+            
+            # Check for authentication errors
+            if "authentication" in error_str or "unauthorized" in error_str or "401" in error_str:
+                return get_error_message(401, "Gemini")
+            
+            # Check for forbidden errors
+            if "forbidden" in error_str or "403" in error_str:
+                return get_error_message(403, "Gemini")
+            
+            return handle_api_exception(e, "Gemini")
 
-    url, headers, payload, querystring = build_request(body.model, body.prompt, rapidapi_key)
+    # Build request for other models
+    try:
+        url, headers, payload, querystring = build_request(body.model, body.prompt, rapidapi_key)
+    except ValueError as e:
+        return handle_model_specific_error(body.model, "api_key_missing", str(e))
+    except Exception as e:
+        return handle_api_exception(e, body.model)
 
     try:
         if not url:
-            return {"text": "[ERROR] Invalid or missing URL"}
+            return handle_model_specific_error(body.model, "invalid_response", "Invalid or missing URL")
 
+        # Make API request
         if querystring:
             r = requests.post(url, json=payload, headers=headers, params=querystring, timeout=500)
         else:
             r = requests.post(url, json=payload, headers=headers, timeout=500)
 
-        r.raise_for_status()
+        # Check for HTTP errors and return appropriate messages
+        if r.status_code != 200:
+            return get_error_message(r.status_code, body.model.upper())
+
         data = r.json()
 
         # --- Perplexity ---
@@ -178,34 +213,42 @@ def ask(body: AskBody):
                         answer = "\n".join(matches)
 
                 if not answer:
-                    answer = str(data)
+                    return handle_model_specific_error("Perplexity", "no_response")
 
                 answer = format_response(enforce_model_identity(clean_text(answer)))
-
                 return {"text": answer}
 
+            except KeyError as e:
+                return handle_model_specific_error("Perplexity", "invalid_response", f"Missing key: {str(e)}")
             except Exception as e:
-                return {"text": f"[ERROR: Cannot extract clean Perplexity response — {type(e).__name__}: {str(e)}]"}
+                return handle_api_exception(e, "Perplexity")
 
         # --- DeepSeek ---
         if body.model.lower() == "deepseek":
             try:
                 choices = data.get("choices")
                 if not choices:
-                    return {"text": "[ERROR: No choices returned by DeepSeek]"}
+                    return handle_model_specific_error("DeepSeek", "invalid_response", "No choices returned")
 
                 message = choices[0].get("message")
                 if not message:
-                    return {"text": "[ERROR: No message in DeepSeek response]"}
+                    return handle_model_specific_error("DeepSeek", "invalid_response", "No message in response")
 
                 answer = message.get("content") or message.get("reasoning_content") or ""
+                
+                if not answer:
+                    return handle_model_specific_error("DeepSeek", "no_response")
+                
                 answer = re.sub(r"<\/?(think|hink)>.*?<\/(think|hink)>", "", answer, flags=re.DOTALL)
                 parts = [p.strip() for p in answer.splitlines() if p.strip()]
                 answer = "\n".join(parts)
 
                 return {"text": format_response(clean_text(answer))}
+                
+            except KeyError as e:
+                return handle_model_specific_error("DeepSeek", "invalid_response", f"Missing key: {str(e)}")
             except Exception as e:
-                return {"text": f"[ERROR: Cannot extract DeepSeek response: {e}]"}
+                return handle_api_exception(e, "DeepSeek")
 
         # --- GPT / Default ---
         if body.model.lower() == "gpt":
@@ -217,17 +260,43 @@ def ask(body: AskBody):
                         answer = msg.get("content") or data["choices"][0].get("text")
                     elif "result" in data:
                         answer = data["result"]
+                
                 if not answer:
-                    answer = str(data)
+                    return handle_model_specific_error("GPT", "no_response")
+                
                 return {"text": format_response(enforce_model_identity(clean_text(answer)))}
+                
+            except KeyError as e:
+                return handle_model_specific_error("GPT", "invalid_response", f"Missing key: {str(e)}")
             except Exception as e:
-                return {"text": f"[ERROR extracting GPT response: {e}]"}
+                return handle_api_exception(e, "GPT")
 
         # --- Fallback ---
         return {"text": format_response(clean_text(str(data)))}
 
+    except requests.exceptions.Timeout:
+        return get_error_message(504, body.model.upper())
+    
+    except requests.exceptions.ConnectionError:
+        return get_error_message(503, body.model.upper())
+    
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None:
+            return get_error_message(e.response.status_code, body.model.upper())
+        return get_error_message(500, body.model.upper())
+    
+    except requests.exceptions.RequestException as e:
+        return handle_api_exception(e, body.model.upper())
+    
+    except ValueError as e:
+        # JSON decode errors
+        error_str = str(e).lower()
+        if "json" in error_str:
+            return handle_model_specific_error(body.model.upper(), "invalid_response", "JSON parse error")
+        return handle_api_exception(e, body.model.upper())
+    
     except Exception as e:
-        return {"text": f"[EXCEPTION] {str(e)}"}
+        return handle_api_exception(e, body.model.upper())
 
 
 # ==========================
@@ -235,20 +304,28 @@ def ask(body: AskBody):
 # ==========================
 @app.post("/api/share")
 def create_share(body: ShareBody):
-    sid = uuid.uuid4().hex[:12]
-    SHARES[sid] = {
-        "id": sid,
-        "model": body.model,
-        "prompt": body.prompt,
-        "response": body.response,
-        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    }
-    frontend = os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:5173")
-    return {"id": sid, "url": f"{frontend}/share/{sid}"}
+    try:
+        sid = uuid.uuid4().hex[:12]
+        SHARES[sid] = {
+            "id": sid,
+            "model": body.model,
+            "prompt": body.prompt,
+            "response": body.response,
+            "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        frontend = os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:5173")
+        return {"id": sid, "url": f"{frontend}/share/{sid}"}
+    except Exception as e:
+        return {"error": f"❌ Share create karte waqt error aaya: {str(e)}"}
 
 @app.get("/api/share/{sid}")
 def get_share(sid: str):
-    rec = SHARES.get(sid)
-    if not rec:
-        raise HTTPException(status_code=404, detail="Not found")
-    return rec
+    try:
+        rec = SHARES.get(sid)
+        if not rec:
+            raise HTTPException(status_code=404, detail="Share nahi mila")
+        return rec
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": f"❌ Share retrieve karte waqt error aaya: {str(e)}"}
