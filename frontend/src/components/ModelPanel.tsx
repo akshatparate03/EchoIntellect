@@ -121,7 +121,10 @@ export default function ModelPanel({
         <div className="flex items-center gap-2">
           <button
             className="btn btn-ghost"
-            onClick={() => navigator.clipboard.writeText(response)}
+            onClick={() => {
+              navigator.clipboard.writeText(response);
+              alert("Last response copied!");
+            }}
             disabled={!response}
           >
             Copy

@@ -90,9 +90,7 @@ export default function Navbar() {
               <Link
                 to="/compare"
                 className={
-                  pathname === "/compare"
-                    ? "text-[var(--color-primary)]"
-                    : "hover:text-[var(--color-primary)]"
+                  pathname === "/compare" ? "text-[var(--color-primary)]" : ""
                 }
               >
                 Compare
