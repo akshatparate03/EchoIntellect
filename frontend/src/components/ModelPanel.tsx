@@ -22,20 +22,24 @@ export default function ModelPanel({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [response, setResponse] = useState<string>(existingResponse || "");
-  const [shouldAnimate, setShouldAnimate] = useState(false); // ✅ Track if we should animate
+  const [response, setResponse] = useState<string>("");
+  const [shouldAnimate, setShouldAnimate] = useState(false);
 
-  // ✅ FIXED: Track if we've already fetched for this prompt to prevent re-fetching
   const fetchedPromptRef = useRef<string>("");
-  const mountedRef = useRef(false);
+  const hasCalledOnResponseRef = useRef(false);
+  const onResponseRef = useRef(onResponse);
 
-  // ✅ FIXED: Update response when existingResponse changes (without re-typing)
+  // Update onResponse ref
   useEffect(() => {
-    if (existingResponse && !response) {
-      // Only set if we don't have a response yet
+    onResponseRef.current = onResponse;
+  }, [onResponse]);
+
+  // Set existing response on mount ONCE
+  useEffect(() => {
+    if (existingResponse && !response && !fetchedPromptRef.current) {
       setResponse(existingResponse);
-      setShouldAnimate(false); // Don't animate existing response
-      fetchedPromptRef.current = initialPrompt; // Mark as already fetched
+      setShouldAnimate(false);
+      hasCalledOnResponseRef.current = true;
     }
   }, [existingResponse]);
 
@@ -48,15 +52,23 @@ export default function ModelPanel({
 
     setLoading(true);
     setError(null);
-    setShouldAnimate(true); // ✅ Enable animation for new response
+    setResponse("");
+    setShouldAnimate(true);
+    hasCalledOnResponseRef.current = false;
 
     try {
       const { text } = await askModel(model, prompt);
       const cleanText = String(text || "").trim();
+
       setResponse(cleanText);
+      fetchedPromptRef.current = prompt;
       incrementUsage(model);
-      onResponse?.(cleanText);
-      fetchedPromptRef.current = prompt; // Mark this prompt as fetched
+
+      // Call onResponse only once
+      if (!hasCalledOnResponseRef.current) {
+        onResponseRef.current?.(cleanText);
+        hasCalledOnResponseRef.current = true;
+      }
     } catch (error: any) {
       setError(error?.message || "Failed");
       setShouldAnimate(false);
@@ -65,20 +77,12 @@ export default function ModelPanel({
     }
   }
 
-  // ✅ FIXED: Load from parent's response prop if available on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // ✅ FIXED: Only run if initialPrompt is new and not empty
+  // Only run when initialPrompt changes AND is not empty AND different from last
   useEffect(() => {
     if (
       initialPrompt &&
-      initialPrompt !== fetchedPromptRef.current &&
-      mountedRef.current
+      initialPrompt.trim() !== "" &&
+      initialPrompt !== fetchedPromptRef.current
     ) {
       run(initialPrompt);
     }
@@ -94,10 +98,11 @@ export default function ModelPanel({
       );
 
     if (error) return <div className="text-red-400">{error}</div>;
+
     if (!response)
       return <div className="text-muted text-sm">No response yet.</div>;
 
-    // ✅ FIXED: Only animate when shouldAnimate is true (new response)
+    // Only animate new responses
     return shouldAnimate ? (
       <TypewriterText text={response} onDone={() => setShouldAnimate(false)} />
     ) : (

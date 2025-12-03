@@ -12,56 +12,59 @@ export default function TypewriterText({
   onDone?: () => void;
 }) {
   const [output, setOutput] = useState("");
-  const indexRef = useRef(0);
-  const isDoneRef = useRef(false);
-  const textRef = useRef(text);
+  const intervalIdRef = useRef<number | null>(null);
+  const textRef = useRef("");
+  const onDoneRef = useRef(onDone);
 
-  // ✅ FIXED: If text hasn't changed, don't re-animate
+  // Update onDone ref without triggering re-render
   useEffect(() => {
-    // If text is the same as before, just display it instantly
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
+  useEffect(() => {
+    // Clear any existing interval
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
+    }
+
+    // If same text as before, skip animation
     if (text === textRef.current && output === text) {
       return;
     }
 
-    // New text detected - reset and animate
+    // Update text ref
     textRef.current = text;
+
+    // Reset output
     setOutput("");
-    indexRef.current = 0;
-    isDoneRef.current = false;
 
-    const id = setInterval(() => {
-      if (isDoneRef.current) {
+    if (!text) return;
+
+    let index = 0;
+
+    intervalIdRef.current = window.setInterval(() => {
+      if (index >= text.length) {
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+          intervalIdRef.current = null;
+        }
+        // Call onDone from ref
+        onDoneRef.current?.();
         return;
       }
 
-      const currentIndex = indexRef.current;
-
-      if (currentIndex >= text.length) {
-        isDoneRef.current = true;
-        clearInterval(id);
-        onDone?.();
-        return;
-      }
-
-      const char = text[currentIndex];
-      if (char !== undefined) {
-        setOutput((prev) => prev + char);
-      }
-
-      indexRef.current++;
-
-      if (indexRef.current >= text.length) {
-        isDoneRef.current = true;
-        clearInterval(id);
-        onDone?.();
-      }
+      setOutput(text.substring(0, index + 1));
+      index++;
     }, Math.max(5, speed));
 
     return () => {
-      clearInterval(id);
-      isDoneRef.current = true;
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
     };
-  }, [text, speed, onDone]);
+  }, [text, speed]); // Only text and speed in dependency
 
   return <div className="whitespace-pre-wrap leading-relaxed">{output}</div>;
 }

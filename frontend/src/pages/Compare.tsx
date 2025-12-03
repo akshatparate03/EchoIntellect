@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { isAuthenticated } from "../utils/auth";
 import ModelPanel from "../components/ModelPanel";
@@ -19,94 +19,148 @@ export default function Compare() {
 
   const [prompt, setPrompt] = useState("");
   const [models, setModels] = useState<ModelKey[]>([]);
-
   const [responses, setResponses] = useState<ModelResponses>({
     gpt: undefined,
     gemini: undefined,
     perplexity: undefined,
     deepseek: undefined,
   });
-
   const [fullscreen, setFullscreen] = useState<ModelKey | null>(null);
-
-  // ✅ FIXED: Track if responses have been loaded to prevent re-typing
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const hasLoadedSession = useRef(false);
   const isRestoringRef = useRef(false);
 
-  /** Load previous comparison from sessionStorage (not localStorage) */
+  /** Load from sessionStorage - RUNS ONLY ONCE */
   useEffect(() => {
+    if (hasLoadedSession.current) return;
+
     const saved = sessionStorage.getItem("comparisonData");
 
-    // If URL has params, use those (new search)
     if (promptParam && modelsParam.length > 0) {
       setPrompt(promptParam);
       setModels(modelsParam);
-      setIsInitialLoad(true); // Trigger new search
+      setIsInitialLoad(true);
       hasLoadedSession.current = true;
-    } else if (saved && !hasLoadedSession.current) {
-      // No URL params, restore from session ONCE
+    } else if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        isRestoringRef.current = true; // Mark that we're restoring
+        isRestoringRef.current = true;
         setPrompt(parsed.prompt);
         setModels(parsed.models);
         setResponses(parsed.responses);
-        setIsInitialLoad(false); // Don't trigger typing again
+        setIsInitialLoad(false);
         hasLoadedSession.current = true;
 
-        // Clear the restoring flag after a short delay
         setTimeout(() => {
           isRestoringRef.current = false;
-        }, 100);
+        }, 200);
       } catch (e) {
         console.error("Failed to parse comparison data:", e);
       }
     }
   }, [promptParam, modelsParam]);
 
-  /** Auth check */
+  /** Auth check - RUNS ONLY ONCE */
   useEffect(() => {
     if (!isAuthenticated()) {
       nav(
         `/login?next=${encodeURIComponent(location.pathname + location.search)}`
       );
-      return;
     }
-  }, []);
+  }, [nav]);
 
-  /** ✅ FIXED: Save to sessionStorage when responses update + trigger navbar immediately */
+  /** Save to sessionStorage - NO DEPENDENCY ON prompt/models */
   useEffect(() => {
-    const any = Object.values(responses).some(
+    // Skip if restoring
+    if (isRestoringRef.current) return;
+
+    // Skip if no models
+    if (models.length === 0) return;
+
+    // Check if any response exists
+    const hasAnyResponse = Object.values(responses).some(
       (r) => r && String(r).trim() !== ""
     );
-    if (any) {
-      sessionStorage.setItem(
-        "comparisonData",
-        JSON.stringify({
-          prompt,
-          responses,
-          models,
-        })
-      );
-    }
-    // Also save when prompt exists (even before responses come)
-    if (prompt && models.length > 0) {
-      sessionStorage.setItem(
-        "comparisonData",
-        JSON.stringify({
-          prompt,
-          responses,
-          models,
-        })
-      );
-    }
-  }, [responses, prompt, models]);
 
-  function setResp(model: ModelKey, text: string) {
-    const cleanText = String(text || "").trim();
-    setResponses((prev) => ({ ...prev, [model]: cleanText }));
-  }
+    // Only save if we have responses
+    if (hasAnyResponse) {
+      const timer = setTimeout(() => {
+        sessionStorage.setItem(
+          "comparisonData",
+          JSON.stringify({ prompt, responses, models })
+        );
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    responses.gpt,
+    responses.gemini,
+    responses.perplexity,
+    responses.deepseek,
+  ]); // ✅ Individual response values, not the whole object
+
+  /** Create stable callback functions for each model */
+  const handleGptResponse = useMemo(
+    () => (text: string) => {
+      const cleanText = String(text || "").trim();
+      setResponses((prev) => {
+        if (prev.gpt === cleanText) return prev;
+        return { ...prev, gpt: cleanText };
+      });
+    },
+    []
+  );
+
+  const handleGeminiResponse = useMemo(
+    () => (text: string) => {
+      const cleanText = String(text || "").trim();
+      setResponses((prev) => {
+        if (prev.gemini === cleanText) return prev;
+        return { ...prev, gemini: cleanText };
+      });
+    },
+    []
+  );
+
+  const handlePerplexityResponse = useMemo(
+    () => (text: string) => {
+      const cleanText = String(text || "").trim();
+      setResponses((prev) => {
+        if (prev.perplexity === cleanText) return prev;
+        return { ...prev, perplexity: cleanText };
+      });
+    },
+    []
+  );
+
+  const handleDeepseekResponse = useMemo(
+    () => (text: string) => {
+      const cleanText = String(text || "").trim();
+      setResponses((prev) => {
+        if (prev.deepseek === cleanText) return prev;
+        return { ...prev, deepseek: cleanText };
+      });
+    },
+    []
+  );
+
+  // Map model to handler
+  const getResponseHandler = (model: ModelKey) => {
+    switch (model) {
+      case "gpt":
+        return handleGptResponse;
+      case "gemini":
+        return handleGeminiResponse;
+      case "perplexity":
+        return handlePerplexityResponse;
+      case "deepseek":
+        return handleDeepseekResponse;
+      default:
+        return () => {};
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex flex-col bg-app text-fg">
@@ -114,7 +168,7 @@ export default function Compare() {
       <div className="bg-grid" />
       <div className="bg-ai-gradient" />
 
-      {/* ✅ FIXED: Main content with proper height calculation */}
+      {/* Main content */}
       <div
         className="relative z-10 flex-1 overflow-y-auto"
         style={{
@@ -124,7 +178,7 @@ export default function Compare() {
         }}
       >
         <div className="mx-auto max-w-[1400px] px-4 py-4 h-full flex flex-col">
-          {/* 4 static columns */}
+          {/* Model panels grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-shrink-0">
             {models.map((m) => (
               <div
@@ -137,19 +191,19 @@ export default function Compare() {
                   onHeaderClick={() =>
                     setFullscreen((fs) => (fs === m ? null : m))
                   }
-                  onResponse={(t) => setResp(m, t)}
-                  existingResponse={responses[m]} // Pass existing response
+                  onResponse={getResponseHandler(m)}
+                  existingResponse={responses[m]}
                 />
               </div>
             ))}
           </div>
 
-          {/* ✅ FIXED: Input at bottom with minimal margin */}
+          {/* Input at bottom */}
           <div className="mt-4 max-w-[800px] mx-auto w-full flex-shrink-0">
             <PromptInput
               placeholder="Ask all selected models..."
               onSubmit={(p) => {
-                setIsInitialLoad(true); // Reset for new query
+                setIsInitialLoad(true);
                 location.assign(
                   `/compare?prompt=${encodeURIComponent(
                     p
@@ -161,7 +215,7 @@ export default function Compare() {
         </div>
       </div>
 
-      {/* Footer fixed at bottom */}
+      {/* Footer */}
       <footer className="fixed bottom-0 left-0 w-full bg-[#0f1620] border-t border-gray-800 z-50">
         <div className="mx-auto max-w-[1400px] px-4 py-3 text-center text-muted text-sm">
           © 2025 <span className="font-semibold text-white">EchoIntellect</span>
