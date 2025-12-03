@@ -106,7 +106,7 @@ export default function Login() {
                 </label>
                 <input
                   type="email"
-                  placeholder="username@example.com"
+                  placeholder="username@gmail.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -121,7 +121,7 @@ export default function Login() {
                 </label>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   required
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
