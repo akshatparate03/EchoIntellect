@@ -25,6 +25,10 @@ export default function ModelPanel({
   const [response, setResponse] = useState<string>("");
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
+  // Toast state
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
   const fetchedPromptRef = useRef<string>("");
   const hasCalledOnResponseRef = useRef(false);
   const onResponseRef = useRef(onResponse);
@@ -42,6 +46,20 @@ export default function ModelPanel({
       hasCalledOnResponseRef.current = true;
     }
   }, [existingResponse]);
+
+  // Show toast function
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setToastVisible(true);
+  };
+
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toastVisible) {
+      const timer = setTimeout(() => setToastVisible(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastVisible]);
 
   /** Model generation logic */
   async function run(prompt: string) {
@@ -123,7 +141,7 @@ export default function ModelPanel({
             className="btn btn-ghost"
             onClick={() => {
               navigator.clipboard.writeText(response);
-              alert("Last response copied!");
+              showToast("Response copied to clipboard!");
             }}
             disabled={!response}
           >
@@ -134,13 +152,17 @@ export default function ModelPanel({
             className="btn btn-ghost"
             disabled={!response}
             onClick={async () => {
-              const share = await createShare({
-                model,
-                prompt: initialPrompt,
-                response,
-              });
-              await navigator.clipboard.writeText(share.url);
-              alert("Share link copied!");
+              try {
+                const share = await createShare({
+                  model,
+                  prompt: initialPrompt,
+                  response,
+                });
+                await navigator.clipboard.writeText(share.url);
+                showToast("Share link copied to clipboard!");
+              } catch (error) {
+                showToast("Failed to create share link!");
+              }
             }}
           >
             Share
@@ -163,6 +185,39 @@ export default function ModelPanel({
           disabled={loading}
         />
       </div>
+
+      {/* Toast Component - Same Style as Login/Contact */}
+      {toastVisible && (
+        <div className="fixed top-[90px] right-6 bg-[#111827]/90 text-white px-4 py-3 rounded-xl border border-gray-600/70 shadow-xl backdrop-blur-md z-[9999] animate-toastSlideIn">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            <p className="text-sm font-medium">{toastMessage}</p>
+            <button
+              onClick={() => setToastVisible(false)}
+              className="text-gray-300 hover:text-white ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Animation CSS */}
+      <style>{`
+        @keyframes toastSlideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-toastSlideIn {
+          animation: toastSlideIn 0.3s ease-out;
+        }
+      `}</style>
     </section>
   );
 }
