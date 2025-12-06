@@ -13,7 +13,7 @@ load_dotenv()
 app = FastAPI(title="EchoIntellect Backend", version="0.2.1")
 
 # ==========================
-# âœ… CORS Configuration
+# ✅ CORS Configuration
 # ==========================
 origins = ["*", os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")]
 app.add_middleware(
@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # ==========================
-# ðŸ“¦ Data Models
+# 📦 Data Models
 # ==========================
 class AskBody(BaseModel):
     model: str
@@ -36,12 +36,30 @@ class ShareBody(BaseModel):
     response: str
 
 # ==========================
-# ðŸ§  In-memory share storage
+# 🗂 In-memory share storage
 # ==========================
 SHARES: Dict[str, Dict] = {}
 
 # ==========================
-# ðŸ§¹ Utility Functions
+# 🏠 ROOT ENDPOINT (HEALTH CHECK)
+# ==========================
+@app.get("/")
+def root():
+    return {
+        "status": "running",
+        "message": "🚀 EchoIntellect Backend API is live!",
+        "version": "0.2.1",
+        "endpoints": {
+            "root": "GET /",
+            "ask": "POST /api/ask",
+            "create_share": "POST /api/share",
+            "get_share": "GET /api/share/{sid}"
+        },
+        "docs": "/docs"
+    }
+
+# ==========================
+# 🧹 Utility Functions
 # ==========================
 def clean_text(text: str) -> str:
     if not text:
@@ -97,7 +115,7 @@ def format_response(answer: str) -> str:
     answer = re.sub(r"\n{3,}", "\n\n", answer)
     answer = re.sub(r"[ \t]+\n", "\n", answer)
 
-    answer = re.sub(r"â€¢", "-", answer)
+    answer = re.sub(r"•", "-", answer)
     answer = re.sub(r"(?<!\n)\s*-\s+", "\n- ", answer)
 
     answer = re.sub(r"\s{2,}", " ", answer)
@@ -107,7 +125,7 @@ def format_response(answer: str) -> str:
     return answer.strip()
 
 # ==========================
-# ðŸš€ Main Ask Endpoint
+# 🚀 Main Ask Endpoint
 # ==========================
 @app.post("/api/ask")
 def ask(body: AskBody):
@@ -127,8 +145,8 @@ def ask(body: AskBody):
             instruction = (
                 "You are Gemini 2.5 Flash.\n\n"
                 "CRITICAL: Respond in THE SAME LANGUAGE as the user's input.\n"
-                "- English input â†’ English output\n"
-                "- Hinglish input â†’ Hinglish output\n"
+                "- English input → English output\n"
+                "- Hinglish input → Hinglish output\n"
                 "- NEVER use Devanagari script\n\n"
                 f"{body.prompt}"
             )
@@ -300,7 +318,7 @@ def ask(body: AskBody):
 
 
 # ==========================
-# ðŸ”— Share API
+# 📤 Share API
 # ==========================
 @app.post("/api/share")
 def create_share(body: ShareBody):
@@ -316,7 +334,7 @@ def create_share(body: ShareBody):
         frontend = os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:5173")
         return {"id": sid, "url": f"{frontend}/share/{sid}"}
     except Exception as e:
-        return {"error": f"âŒ Share create karte waqt error aaya: {str(e)}"}
+        return {"error": f"⚠️ Share create karte waqt error aaya: {str(e)}"}
 
 @app.get("/api/share/{sid}")
 def get_share(sid: str):
@@ -328,4 +346,4 @@ def get_share(sid: str):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": f"âŒ Share retrieve karte waqt error aaya: {str(e)}"}
+        return {"error": f"⚠️ Share retrieve karte waqt error aaya: {str(e)}"}
