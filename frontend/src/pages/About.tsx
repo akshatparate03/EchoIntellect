@@ -98,13 +98,14 @@ export default function About() {
               transition-all duration-500 hover:shadow-primary/50 hover:border-primary hover:-translate-y-1 hover:scale-[1.01] hover:rotate-[1deg]"
             >
               <div
-                className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-primary shadow-md group cursor-pointer
+                className="relative flex-shrink-0 w-28 h-28 rounded-full overflow-hidden border-2 border-primary shadow-md group cursor-pointer
                 transition-all duration-500 hover:shadow-primary/70 hover:scale-105 hover:rotate-[-2deg]"
               >
                 <img
                   src={AkshatImg}
                   alt="Akshat Parate"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
+                  style={{ aspectRatio: "1/1" }}
                 />
                 <a
                   href="https://www.linkedin.com/in/akshat-parate"
@@ -134,13 +135,14 @@ export default function About() {
               transition-all duration-500 hover:shadow-primary/50 hover:border-primary hover:-translate-y-1 hover:scale-[1.01] hover:rotate-[1deg]"
             >
               <div
-                className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-primary shadow-md group cursor-pointer
+                className="relative flex-shrink-0 w-28 h-28 rounded-full overflow-hidden border-2 border-primary shadow-md group cursor-pointer
                 transition-all duration-500 hover:shadow-primary/70 hover:scale-105 hover:rotate-[-2deg]"
               >
                 <img
                   src={PoojaImg}
                   alt="Pooja Soni"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
+                  style={{ aspectRatio: "1/1" }}
                 />
                 <a
                   href="https://www.linkedin.com/in/pooja-soni098"

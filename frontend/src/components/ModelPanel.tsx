@@ -14,6 +14,7 @@ export default function ModelPanel({
   onHeaderClick,
   onResponse,
   existingResponse,
+  isFullscreen = false,
 }: {
   model: ModelKey;
   initialPrompt: string;
@@ -21,6 +22,7 @@ export default function ModelPanel({
   onHeaderClick?: () => void;
   onResponse?: (text: string) => void;
   existingResponse?: string;
+  isFullscreen?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,16 +135,20 @@ export default function ModelPanel({
   }, [loading, error, response, shouldAnimate]);
 
   return (
-    <section className="bg-panel/80 border border-panel rounded-xl p-4 flex flex-col h-[500px] backdrop-blur-md shadow-lg">
+    <section
+      className={`bg-panel/80 border border-panel rounded-xl p-4 flex flex-col backdrop-blur-md shadow-lg ${
+        isFullscreen ? "h-full" : "h-[500px] lg:h-[calc(100vh-14rem)]"
+      }`}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <button onClick={onHeaderClick} className="text-left">
           <div className="text-sm text-muted">{model.toUpperCase()}</div>
         </button>
 
         <div className="flex items-center gap-2">
           <button
-            className="btn btn-ghost"
+            className="btn btn-ghost text-xs sm:text-sm px-2 sm:px-4"
             onClick={() => {
               navigator.clipboard.writeText(response);
               showToast("Response copied to clipboard!");
@@ -153,7 +159,7 @@ export default function ModelPanel({
           </button>
 
           <button
-            className="btn btn-ghost"
+            className="btn btn-ghost text-xs sm:text-sm px-2 sm:px-4"
             disabled={!response}
             onClick={async () => {
               try {
@@ -186,12 +192,12 @@ export default function ModelPanel({
       </div>
 
       {/* Scrollable Response */}
-      <div className="mt-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+      <div className="mt-3 flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
         {body}
       </div>
 
       {/* Input Box */}
-      <div className="mt-3">
+      <div className="mt-3 flex-shrink-0">
         <PromptInput
           placeholder={`${model.toUpperCase()}... (${getRemainingForToday(
             model

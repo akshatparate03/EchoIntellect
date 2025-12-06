@@ -16,6 +16,7 @@ export default function PromptInput({
   maxHeight?: number;
 }) {
   const [val, setVal] = useState("");
+  const [hasInteracted, setHasInteracted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -28,6 +29,13 @@ export default function PromptInput({
     textarea.style.height = `${newHeight}px`;
   }, [val, maxHeight]);
 
+  // Only autofocus if user has interacted OR if explicitly set on desktop
+  useEffect(() => {
+    if (autoFocus && hasInteracted && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [autoFocus, hasInteracted]);
+
   return (
     <form
       onSubmit={(e) => {
@@ -36,11 +44,11 @@ export default function PromptInput({
         onSubmit(val.trim());
         setVal("");
       }}
-      className="relative"
+      className="relative flex items-center gap-2"
     >
       <textarea
         ref={textareaRef}
-        className="input pr-32 resize-none custom-scrollbar"
+        className="input pr-2 resize-none custom-scrollbar flex-1"
         style={{
           minHeight: "48px",
           maxHeight: `${maxHeight}px`,
@@ -49,9 +57,9 @@ export default function PromptInput({
         value={val}
         onChange={(e) => setVal(e.target.value)}
         placeholder={placeholder}
-        autoFocus={autoFocus}
         disabled={disabled}
         rows={1}
+        onFocus={() => setHasInteracted(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -65,7 +73,8 @@ export default function PromptInput({
       <button
         type="submit"
         disabled={disabled}
-        className="btn btn-primary absolute right-2 bottom-2"
+        className="btn btn-primary self-end mb-[2px] px-6 py-2.5"
+        style={{ height: "44px" }}
       >
         Send
       </button>

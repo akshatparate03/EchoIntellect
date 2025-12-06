@@ -16,7 +16,7 @@
   --diff-yellow: rgba(234, 179, 8, 0.18);
 
   --header-height: 3.5rem;
-  --footer-height: 3.5rem;
+  --footer-height: 3.75rem;
 }
 
 @media (min-width: 640px) {
@@ -340,14 +340,17 @@ input[type="button"],
    Home Page - Fixed Height, No Scroll
 ========================== */
 .home-page {
-  height: calc(100vh - var(--header-height) - var(--footer-height));
+  position: fixed;
+  top: var(--header-height);
+  bottom: var(--footer-height);
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 1rem;
-  overflow: hidden;
-  position: relative;
+  overflow: hidden !important;
 }
 
 .home-page .hero-content {
@@ -360,21 +363,23 @@ input[type="button"],
 @media (max-width: 640px) {
   .home-page {
     padding: 0.5rem;
-    height: calc(100vh - var(--header-height) - var(--footer-height));
   }
 }
 
 /* Touch device optimization - prevent any scrolling on home */
 @media (hover: none) and (pointer: coarse) {
-  .home-page {
+  /* Only apply to home page route */
+  body:has([class*="home"]) {
     position: fixed;
-    top: var(--header-height);
-    bottom: var(--footer-height);
-    left: 0;
-    right: 0;
-    height: auto;
+    width: 100%;
     overflow: hidden;
-    touch-action: none;
+  }
+
+  body:has([class*="home"]) #root {
+    overflow: hidden !important;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
   }
 }
 
@@ -382,12 +387,16 @@ input[type="button"],
    Contact Page - Perfectly Centered
 ========================== */
 .contact-page {
-  height: calc(100vh - var(--header-height) - var(--footer-height));
+  position: fixed;
+  top: var(--header-height);
+  bottom: var(--footer-height);
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem;
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
 @media (max-width: 640px) {
@@ -400,22 +409,35 @@ input[type="button"],
   background: #0f1620;
   border: 1px solid #1b2636;
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   width: 100%;
   max-width: 500px;
+  max-height: calc(100vh - var(--header-height) - var(--footer-height) - 1rem);
+  overflow-y: auto;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   text-align: center;
   animation: fadeIn 0.6s ease;
 }
 
+.contact-box::-webkit-scrollbar {
+  display: none;
+}
+
+.contact-box {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media (min-width: 640px) {
   .contact-box {
     padding: 2rem;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
 .contact-box h2 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   margin-bottom: 0.75rem;
   color: var(--color-primary);
 }
@@ -428,9 +450,9 @@ input[type="button"],
 }
 
 .contact-box p {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--color-muted);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 640px) {

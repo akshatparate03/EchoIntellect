@@ -31,18 +31,27 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden bg-app text-fg">
+    <div
+      className="fixed inset-0 flex flex-col bg-app text-fg"
+      style={{ height: "100vh", overflow: "hidden" }}
+    >
       {/* Background layers */}
-      <div className="bg-grid" />
-      <div className="bg-ai-gradient" />
+      <div className="bg-grid fixed inset-0" />
+      <div className="bg-ai-gradient fixed inset-0" />
+
+      {/* Spacer for navbar */}
+      <div style={{ height: "var(--header-height)", flexShrink: 0 }} />
 
       {/* Main content area - Centered with proper spacing */}
-      <div className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 py-8 overflow-hidden">
-        <div className="max-w-4xl mx-auto w-full space-y-6 sm:space-y-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 text-balance leading-tight px-2">
+      <div
+        className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 overflow-hidden"
+        style={{ minHeight: 0 }}
+      >
+        <div className="max-w-4xl mx-auto w-full space-y-4 sm:space-y-8">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-semibold mb-3 sm:mb-6 leading-tight px-2 sm:whitespace-nowrap">
             Ask once and Learn from many AI minds.
           </h1>
-          <p className="text-muted text-base sm:text-lg md:text-xl mb-6 sm:mb-8 px-4">
+          <p className="text-muted text-sm sm:text-lg md:text-xl mb-4 sm:mb-8 px-4">
             One platform to explore, compare, and learn from advanced AI models
           </p>
 
@@ -55,6 +64,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Spacer for footer */}
+      <div style={{ height: "var(--footer-height)", flexShrink: 0 }} />
 
       {/* Model selector dialog */}
       <ModelSelectorDialog

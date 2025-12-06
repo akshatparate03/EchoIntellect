@@ -1,6 +1,6 @@
 import type { ModelKey } from "./api";
 
-const KEY_USERS = "ei:users"; // map: email -> { hash }
+const KEY_USERS = "ei:users"; // map: email -> { hash, name }
 const KEY_CURRENT = "ei:current"; // { email }
 const KEY_USAGE = "ei:usage"; // map: "email:date:model" -> count
 
@@ -46,15 +46,46 @@ export function currentEmail(): string | null {
   return curr?.email ?? null;
 }
 
+// Return current logged-in user's full name
+export function currentUserName(): string | null {
+  const email = currentEmail();
+  if (!email) return null;
+
+  const users = load<Record<string, { hash: string; name?: string }>>(
+    KEY_USERS,
+    {}
+  );
+  return users[email]?.name ?? null;
+}
+
+// Check if user already exists
+export function checkUserExists(email: string): boolean {
+  const users = load<Record<string, { hash: string; name?: string }>>(
+    KEY_USERS,
+    {}
+  );
+  return !!users[email];
+}
+
 // SIGN UP
-export function signUp(email: string, password: string): { message: string } {
-  const users = load<Record<string, { hash: string }>>(KEY_USERS, {});
+export function signUp(
+  email: string,
+  password: string,
+  name?: string
+): { message: string } {
+  const users = load<Record<string, { hash: string; name?: string }>>(
+    KEY_USERS,
+    {}
+  );
 
   if (users[email]) {
     throw new Error("User already exists");
   }
 
-  users[email] = { hash: sha256(password) };
+  users[email] = {
+    hash: sha256(password),
+    name: name || "",
+  };
   save(KEY_USERS, users);
   save(KEY_CURRENT, { email });
 
@@ -63,7 +94,10 @@ export function signUp(email: string, password: string): { message: string } {
 
 // SIGN IN
 export function signIn(email: string, password: string): { message: string } {
-  const users = load<Record<string, { hash: string }>>(KEY_USERS, {});
+  const users = load<Record<string, { hash: string; name?: string }>>(
+    KEY_USERS,
+    {}
+  );
   const user = users[email];
 
   if (!user || user.hash !== sha256(password)) {

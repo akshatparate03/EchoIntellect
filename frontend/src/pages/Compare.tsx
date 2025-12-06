@@ -172,37 +172,44 @@ export default function Compare() {
   return (
     <div className="fixed inset-0 flex flex-col bg-app text-fg">
       {/* Background */}
-      <div className="bg-grid" />
-      <div className="bg-ai-gradient" />
+      <div className="bg-grid fixed inset-0" />
+      <div className="bg-ai-gradient fixed inset-0" />
+
+      {/* Spacer for navbar */}
+      <div style={{ height: "var(--header-height)", flexShrink: 0 }} />
 
       {/* Main content */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto custom-scrollbar"
-        style={{
-          height: "calc(100vh - 4rem - 4rem)",
-          marginTop: "4rem",
-          marginBottom: "4rem",
-        }}
+        className={`relative z-10 flex-1 flex flex-col ${
+          fullscreen ? "overflow-hidden" : "overflow-y-auto custom-scrollbar"
+        }`}
+        style={{ minHeight: 0 }}
       >
-        <div className="mx-auto max-w-[1400px] px-4 py-4 h-full flex flex-col">
+        <div className="mx-auto max-w-[95%] lg:max-w-[99%] px-4 py-4 w-full flex flex-col h-full">
           {/* Model panels grid */}
           <div
-            className={`grid gap-4 flex-shrink-0 ${
+            className={`flex-1 ${
               fullscreen
-                ? "grid-cols-1"
+                ? "flex flex-col overflow-hidden"
+                : "grid gap-3 lg:gap-4"
+            } ${
+              fullscreen
+                ? ""
                 : models.length === 1
                 ? "grid-cols-1"
                 : models.length === 2
-                ? "grid-cols-1 sm:grid-cols-2"
+                ? "grid-cols-1 lg:grid-cols-2"
                 : models.length === 3
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                ? "grid-cols-1 lg:grid-cols-3"
+                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-4"
             }`}
           >
             {models.map((m) => (
               <div
                 key={m}
-                className={fullscreen && fullscreen !== m ? "hidden" : ""}
+                className={`${fullscreen && fullscreen !== m ? "hidden" : ""} ${
+                  fullscreen ? "flex-1 flex flex-col overflow-hidden" : ""
+                }`}
               >
                 <ModelPanel
                   model={m}
@@ -213,35 +220,33 @@ export default function Compare() {
                   }
                   onResponse={getResponseHandler(m)}
                   existingResponse={responses[m]}
+                  isFullscreen={fullscreen === m}
                 />
               </div>
             ))}
           </div>
 
-          {/* Input at bottom */}
-          <div className="mt-4 max-w-[800px] mx-auto w-full flex-shrink-0">
-            <PromptInput
-              placeholder="Ask all selected models..."
-              onSubmit={(p) => {
-                setIsInitialLoad(true);
-                location.assign(
-                  `/compare?prompt=${encodeURIComponent(
-                    p
-                  )}&models=${models.join(",")}`
-                );
-              }}
-            />
-          </div>
+          {/* Input at bottom - hide in fullscreen mode on mobile */}
+          {!fullscreen && (
+            <div className="mt-4 max-w-[800px] mx-auto w-full flex-shrink-0">
+              <PromptInput
+                placeholder="Ask all selected models..."
+                onSubmit={(p) => {
+                  setIsInitialLoad(true);
+                  location.assign(
+                    `/compare?prompt=${encodeURIComponent(
+                      p
+                    )}&models=${models.join(",")}`
+                  );
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 w-full bg-[#0f1620] border-t border-gray-800 z-50">
-        <div className="mx-auto max-w-[1400px] px-4 py-3 text-center text-muted text-sm">
-          © 2025 <span className="font-semibold text-white">EchoIntellect</span>
-          . All rights reserved.
-        </div>
-      </footer>
+      {/* Spacer for footer */}
+      <div style={{ height: "var(--footer-height)", flexShrink: 0 }} />
     </div>
   );
 }

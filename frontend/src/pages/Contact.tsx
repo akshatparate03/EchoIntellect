@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { isAuthenticated, currentEmail } from "../utils/auth";
+import { isAuthenticated, currentEmail, currentUserName } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 
 export default function Contact() {
@@ -14,16 +14,18 @@ export default function Contact() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Get logged-in user's email
+  // Get logged-in user's email and name
   const loggedInEmail = currentEmail();
+  const loggedInName = currentUserName();
   const isLoggedIn = isAuthenticated();
 
-  // Set email field to logged-in email on mount
+  // Set email and name fields to logged-in user's info on mount
   useEffect(() => {
-    if (isLoggedIn && loggedInEmail) {
-      setEmail(loggedInEmail);
+    if (isLoggedIn) {
+      if (loggedInEmail) setEmail(loggedInEmail);
+      if (loggedInName) setName(loggedInName);
     }
-  }, [isLoggedIn, loggedInEmail]);
+  }, [isLoggedIn, loggedInEmail, loggedInName]);
 
   // Show toast function
   const showToast = (msg: string) => {
@@ -39,43 +41,14 @@ export default function Contact() {
     }
   }, [toastVisible]);
 
-  // Validate name - only letters and spaces
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Allow only letters (a-z, A-Z) and spaces
-    if (/^[a-zA-Z\s]*$/.test(value)) {
-      setName(value);
-    }
-  };
-
-  // Handle email field click - check if logged in
-  const handleEmailClick = (e: React.MouseEvent<HTMLInputElement>) => {
+  // Handle form click - redirect to login if not logged in
+  const handleFormClick = () => {
     if (!isLoggedIn) {
-      e.preventDefault();
       showToast("Please login first to send a message!");
       setTimeout(() => {
         navigate("/login?next=/contact");
       }, 1500);
     }
-  };
-
-  // Handle email change - only allow logged-in email
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-
-    if (!isLoggedIn) {
-      showToast("Please login first!");
-      return;
-    }
-
-    // Only allow the logged-in email
-    if (value !== loggedInEmail) {
-      showToast("You can only use your logged-in email!");
-      setEmail(loggedInEmail || "");
-      return;
-    }
-
-    setEmail(value);
   };
 
   // Handle form submission
@@ -88,17 +61,6 @@ export default function Contact() {
       setTimeout(() => {
         navigate("/login?next=/contact");
       }, 1500);
-      return;
-    }
-
-    if (!/^[a-zA-Z\s]+$/.test(name)) {
-      showToast("Name can only contain letters and spaces!");
-      return;
-    }
-
-    if (email !== loggedInEmail) {
-      showToast("You can only use your logged-in email!");
-      setEmail(loggedInEmail || "");
       return;
     }
 
@@ -135,8 +97,7 @@ export default function Contact() {
 
       showToast("Message sent successfully!");
 
-      // Clear form
-      setName("");
+      // Clear only message field
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -147,77 +108,91 @@ export default function Contact() {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center min-h-screen bg-app text-fg overflow-hidden">
-      {/* --- Background Layers --- */}
-      <div className="bg-ai-gradient absolute inset-0"></div>
-      <div className="bg-grid absolute inset-0"></div>
+    <section
+      className="fixed inset-0 flex flex-col bg-app text-fg"
+      style={{ overflow: "hidden" }}
+    >
+      {/* Background layers */}
+      <div className="bg-ai-gradient fixed inset-0"></div>
+      <div className="bg-grid fixed inset-0"></div>
 
-      {/* --- Contact Box --- */}
-      <div className="relative z-10 bg-panel/80 border border-panel rounded-2xl shadow-xl p-8 w-[85%] max-w-sm backdrop-blur-md">
-        <h1 className="text-2xl font-semibold mb-6 text-primary text-center">
-          Contact Us
-        </h1>
+      {/* Spacer for navbar */}
+      <div style={{ height: "var(--header-height)", flexShrink: 0 }} />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
-          <div>
-            <label className="label">Name</label>
-            <input
-              type="text"
-              placeholder="Enter your name"
-              className="input"
-              value={name}
-              onChange={handleNameChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
+      {/* Main content area - Centered */}
+      <div
+        className="relative z-10 flex-1 flex items-center justify-center px-4 overflow-hidden"
+        style={{ minHeight: 0 }}
+      >
+        <div
+          className="bg-panel/80 border border-panel rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm backdrop-blur-md max-h-full overflow-y-auto custom-scrollbar"
+          onClick={handleFormClick}
+        >
+          <h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-primary text-center">
+            Contact Us
+          </h1>
 
-          <div>
-            <label className="label">Email</label>
-            <input
-              type="email"
-              placeholder={
-                isLoggedIn ? loggedInEmail || "Your email" : "Login first"
-              }
-              className="input"
-              value={email}
-              onChange={handleEmailChange}
-              onClick={handleEmailClick}
-              required
-              disabled={isLoading || !isLoggedIn}
-              readOnly={isLoggedIn}
-            />
-          </div>
-
-          <div>
-            <label className="label">Message</label>
-            <textarea
-              placeholder="Type your message"
-              className="input h-24 resize-none"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-              disabled={isLoading}
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading || !isLoggedIn}
-            className="btn btn-primary mt-4 w-full hover:scale-105 transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-3 sm:gap-4 text-left"
           >
-            {isLoading ? "Sending..." : "Send Message"}
-          </button>
-        </form>
+            <div>
+              <label className="label text-xs sm:text-sm">Name</label>
+              <input
+                type="text"
+                placeholder={isLoggedIn ? name || "Your name" : "Login first"}
+                className="input text-sm cursor-not-allowed opacity-75"
+                value={name}
+                readOnly
+                disabled={!isLoggedIn}
+              />
+            </div>
 
-        {!isLoggedIn && (
-          <p className="text-center text-muted text-xs mt-4">
-            Please login to send a message
-          </p>
-        )}
+            <div>
+              <label className="label text-xs sm:text-sm">Email</label>
+              <input
+                type="email"
+                placeholder={isLoggedIn ? email || "Your email" : "Login first"}
+                className="input text-sm cursor-not-allowed opacity-75"
+                value={email}
+                readOnly
+                disabled={!isLoggedIn}
+              />
+            </div>
+
+            <div>
+              <label className="label text-xs sm:text-sm">Message</label>
+              <textarea
+                placeholder="Type your message"
+                className="input h-20 sm:h-24 resize-none text-sm"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+                disabled={isLoading || !isLoggedIn}
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !isLoggedIn}
+              className="btn btn-primary mt-2 sm:mt-4 w-full hover:scale-105 transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {isLoading ? "Sending..." : "Send Message"}
+            </button>
+          </form>
+
+          {!isLoggedIn && (
+            <p className="text-center text-muted text-xs mt-3 sm:mt-4">
+              Please login to send a message
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Toast Component - LogoutToast Style */}
+      {/* Spacer for footer */}
+      <div style={{ height: "var(--footer-height)", flexShrink: 0 }} />
+
+      {/* Toast Component */}
       {toastVisible && (
         <div className="fixed top-[90px] right-6 bg-[#111827]/90 text-white px-4 py-3 rounded-xl border border-gray-600/70 shadow-xl backdrop-blur-md z-[9999] animate-toastSlideIn">
           <div className="flex items-center gap-3">
