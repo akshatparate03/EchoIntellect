@@ -99,7 +99,7 @@ export default function Compare() {
     responses.gemini,
     responses.perplexity,
     responses.deepseek,
-  ]); // ✅ Individual response values, not the whole object
+  ]);
 
   /** Create stable callback functions for each model */
   const handleGptResponse = useMemo(
@@ -179,7 +179,19 @@ export default function Compare() {
       >
         <div className="mx-auto max-w-[1400px] px-4 py-4 h-full flex flex-col">
           {/* Model panels grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-shrink-0">
+          <div
+            className={`grid gap-4 flex-shrink-0 ${
+              fullscreen
+                ? "grid-cols-1"
+                : models.length === 1
+                ? "grid-cols-1"
+                : models.length === 2
+                ? "grid-cols-1 sm:grid-cols-2"
+                : models.length === 3
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            }`}
+          >
             {models.map((m) => (
               <div
                 key={m}
