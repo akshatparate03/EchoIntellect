@@ -61,6 +61,13 @@ export default function Compare() {
     }
   }, [promptParam, modelsParam]);
 
+  /** Update prompt when URL param changes (for input box submissions) */
+  useEffect(() => {
+    if (promptParam && promptParam !== prompt) {
+      setPrompt(promptParam);
+    }
+  }, [promptParam]);
+
   /** Auth check - RUNS ONLY ONCE */
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -200,6 +207,7 @@ export default function Compare() {
                 <ModelPanel
                   model={m}
                   initialPrompt={isInitialLoad ? prompt : ""}
+                  currentPrompt={prompt}
                   onHeaderClick={() =>
                     setFullscreen((fs) => (fs === m ? null : m))
                   }

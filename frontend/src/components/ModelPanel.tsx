@@ -10,12 +10,14 @@ import { getRemainingForToday, incrementUsage } from "../utils/auth";
 export default function ModelPanel({
   model,
   initialPrompt,
+  currentPrompt,
   onHeaderClick,
   onResponse,
   existingResponse,
 }: {
   model: ModelKey;
   initialPrompt: string;
+  currentPrompt?: string;
   onHeaderClick?: () => void;
   onResponse?: (text: string) => void;
   existingResponse?: string;
@@ -30,6 +32,7 @@ export default function ModelPanel({
   const [toastMessage, setToastMessage] = useState("");
 
   const fetchedPromptRef = useRef<string>("");
+  const lastUsedPromptRef = useRef<string>(""); // Track last actually used prompt
   const hasCalledOnResponseRef = useRef(false);
   const onResponseRef = useRef(onResponse);
 
@@ -80,6 +83,7 @@ export default function ModelPanel({
 
       setResponse(cleanText);
       fetchedPromptRef.current = prompt;
+      lastUsedPromptRef.current = prompt; // Update last used prompt
       incrementUsage(model);
 
       // Call onResponse only once
@@ -153,9 +157,20 @@ export default function ModelPanel({
             disabled={!response}
             onClick={async () => {
               try {
+                // Priority: lastUsedPrompt > currentPrompt > fetchedPrompt
+                const promptToShare =
+                  lastUsedPromptRef.current ||
+                  currentPrompt ||
+                  fetchedPromptRef.current;
+
+                if (!promptToShare) {
+                  showToast("No prompt to share!");
+                  return;
+                }
+
                 const share = await createShare({
                   model,
-                  prompt: initialPrompt,
+                  prompt: promptToShare,
                   response,
                 });
                 await navigator.clipboard.writeText(share.url);
