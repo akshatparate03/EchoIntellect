@@ -63,7 +63,7 @@ export default function ShareView() {
   // Loading UI
   if (state.loading)
     return (
-      <div className="relative flex flex-col min-h-screen bg-app text-fg">
+      <div className="relative flex flex-col min-h-screen bg-app text-fg custom-scrollbar">
         <div className="bg-grid" />
         <div className="bg-ai-gradient" />
         <div className="relative z-10 mx-auto max-w-3xl px-4 py-20">
@@ -75,7 +75,7 @@ export default function ShareView() {
   // Error UI
   if (state.error)
     return (
-      <div className="relative flex flex-col min-h-screen bg-app text-fg">
+      <div className="relative flex flex-col min-h-screen bg-app text-fg custom-scrollbar">
         <div className="bg-grid" />
         <div className="bg-ai-gradient" />
         <div className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-red-400">
@@ -86,7 +86,7 @@ export default function ShareView() {
 
   // Main View
   return (
-    <div className="relative flex flex-col min-h-screen bg-app text-fg overflow-hidden">
+    <div className="relative flex flex-col min-h-screen bg-app text-fg overflow-hidden custom-scrollbar">
       <div className="bg-grid" />
       <div className="bg-ai-gradient" />
 

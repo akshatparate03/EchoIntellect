@@ -32,6 +32,18 @@ body {
   overflow-y: auto; /* Allow vertical scroll by default */
 }
 
+/* ✅ GLOBAL SCROLLBAR HIDE - Apply to html and body */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+html,
+body {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 #root {
   min-height: 100vh;
   display: flex;
@@ -440,4 +452,16 @@ input[type="button"],
   min-height: 100vh;
   padding-top: 5.5rem !important;
   padding-bottom: 5.5rem !important;
+}
+
+/* ==========================
+   ✅ Custom Scrollbar Class for Components
+========================== */
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
 }

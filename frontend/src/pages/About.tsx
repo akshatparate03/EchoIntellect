@@ -3,7 +3,7 @@ const PoojaImg = "/Images/PoojaSoni.png";
 
 export default function About() {
   return (
-    <div className="relative flex flex-col min-h-screen bg-app text-fg">
+    <div className="relative flex flex-col min-h-screen bg-app text-fg custom-scrollbar">
       {/* Background layers - same as Home */}
       <div className="bg-grid" />
       <div className="bg-ai-gradient" />
@@ -50,7 +50,8 @@ export default function About() {
                 Live Response Experience:
               </span>{" "}
               <span className="text-muted">
-                Typing animations and real-time response cues for better interaction.
+                Typing animations and real-time response cues for better
+                interaction.
               </span>
             </li>
             <li className="bg-[#0f1620] border border-panel rounded-lg px-4 py-2">
@@ -122,7 +123,7 @@ export default function About() {
                   Founder · Backend Developer
                 </p>
                 <p className="text-primary text-sm mt-1">
-                  “Building the engine behind intelligence.”
+                  "Building the engine behind intelligence."
                 </p>
               </div>
             </div>
@@ -158,7 +159,7 @@ export default function About() {
                   Co-Founder · Frontend Developer
                 </p>
                 <p className="text-primary text-sm mt-1">
-                  “Turning ideas into interfaces.”
+                  "Turning ideas into interfaces."
                 </p>
               </div>
             </div>

@@ -170,7 +170,7 @@ export default function Compare() {
 
       {/* Main content */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto"
+        className="relative z-10 flex-1 overflow-y-auto custom-scrollbar"
         style={{
           height: "calc(100vh - 4rem - 4rem)",
           marginTop: "4rem",
