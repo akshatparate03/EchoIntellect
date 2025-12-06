@@ -223,23 +223,63 @@ def ask(body: AskBody):
             except Exception as e:
                 return handle_api_exception(e, "Perplexity")
 
-        # --- DeepSeek ---
+        # --- DeepSeek (Updated for new API response structure) ---
         if body.model.lower() == "deepseek":
             try:
-                choices = data.get("choices")
-                if not choices:
-                    return handle_model_specific_error("DeepSeek", "invalid_response", "No choices returned")
-
-                message = choices[0].get("message")
-                if not message:
-                    return handle_model_specific_error("DeepSeek", "invalid_response", "No message in response")
-
-                answer = message.get("content") or message.get("reasoning_content") or ""
+                answer = ""
+                
+                # Check multiple possible response structures
+                if isinstance(data, dict):
+                    # Structure 1: Direct result field
+                    if "result" in data:
+                        answer = data["result"]
+                    
+                    # Structure 2: choices array (standard format)
+                    elif "choices" in data and isinstance(data["choices"], list) and len(data["choices"]) > 0:
+                        choice = data["choices"][0]
+                        if isinstance(choice, dict):
+                            if "message" in choice:
+                                msg = choice["message"]
+                                answer = msg.get("content") or msg.get("reasoning_content", "")
+                            elif "text" in choice:
+                                answer = choice["text"]
+                    
+                    # Structure 3: Direct response/content field
+                    elif "response" in data:
+                        if isinstance(data["response"], dict):
+                            answer = data["response"].get("content") or data["response"].get("text", "")
+                        else:
+                            answer = str(data["response"])
+                    
+                    # Structure 4: Direct content field
+                    elif "content" in data:
+                        answer = data["content"]
+                    
+                    # Structure 5: output_text field
+                    elif "output_text" in data:
+                        answer = data["output_text"]
+                
+                # If still no answer, try to extract from string representation
+                if not answer:
+                    data_str = str(data)
+                    # Try to find content in various formats
+                    matches = re.findall(r"'content':\s*'([^']+)'", data_str)
+                    if not matches:
+                        matches = re.findall(r'"content":\s*"([^"]+)"', data_str)
+                    if matches:
+                        answer = " ".join(matches)
                 
                 if not answer:
-                    return handle_model_specific_error("DeepSeek", "no_response")
+                    return handle_model_specific_error("DeepSeek", "no_response", f"Response structure: {str(data)[:200]}")
                 
+                # Clean up thinking tags if present
                 answer = re.sub(r"<\/?(think|hink)>.*?<\/(think|hink)>", "", answer, flags=re.DOTALL)
+                
+                # Remove meta-commentary/notes from DeepSeek
+                answer = re.sub(r"\(Note:.*?\)", "", answer, flags=re.IGNORECASE)
+                answer = re.sub(r"\[Note:.*?\]", "", answer, flags=re.IGNORECASE)
+                answer = re.sub(r"Note:.*?(as per rules|per rules|according to rules).*?[.!]", "", answer, flags=re.IGNORECASE)
+                
                 parts = [p.strip() for p in answer.splitlines() if p.strip()]
                 answer = "\n".join(parts)
 
