@@ -15,10 +15,18 @@ app = FastAPI(title="EchoIntellect Backend", version="0.2.1")
 # ==========================
 # ✅ CORS Configuration
 # ==========================
-origins = ["*", os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")]
+origins = [
+    "http://localhost:5173",  # Local development
+    "https://echointellect.netlify.app",  # Production Netlify URL
+]
+
+# Remove empty strings from origins list
+origins = [origin for origin in origins if origin]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
