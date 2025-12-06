@@ -31,26 +31,28 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-app text-fg">
+    <div className="relative flex flex-col h-screen overflow-hidden bg-app text-fg">
       {/* Background layers */}
       <div className="bg-grid" />
       <div className="bg-ai-gradient" />
 
-      {/* Main content area */}
-      <div className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 py-8">
-        <h1 className="text-4xl md:text-5xl font-semibold mb-6 text-balance">
-          Ask once and Learn from many AI minds.
-        </h1>
-        <p className="text-muted mb-8 text-lg">
-          One platform to explore, compare, and learn from advanced AI models
-        </p>
+      {/* Main content area - Centered with proper spacing */}
+      <div className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 py-8 overflow-hidden">
+        <div className="max-w-4xl mx-auto w-full space-y-6 sm:space-y-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 text-balance leading-tight px-2">
+            Ask once and Learn from many AI minds.
+          </h1>
+          <p className="text-muted text-base sm:text-lg md:text-xl mb-6 sm:mb-8 px-4">
+            One platform to explore, compare, and learn from advanced AI models
+          </p>
 
-        <div className="relative w-full max-w-2xl mx-auto">
-          <PromptInput
-            placeholder="Enter your prompt..."
-            onSubmit={handleSubmit}
-            autoFocus
-          />
+          <div className="relative w-full max-w-2xl mx-auto px-2">
+            <PromptInput
+              placeholder="Enter your prompt..."
+              onSubmit={handleSubmit}
+              autoFocus
+            />
+          </div>
         </div>
       </div>
 

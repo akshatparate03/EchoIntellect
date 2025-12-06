@@ -15,8 +15,15 @@
   --diff-green: rgba(34, 197, 94, 0.18);
   --diff-yellow: rgba(234, 179, 8, 0.18);
 
-  --header-height: 4rem;
-  --footer-height: 4rem;
+  --header-height: 3.5rem;
+  --footer-height: 3.5rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --header-height: 4rem;
+    --footer-height: 4rem;
+  }
 }
 
 /* ==========================
@@ -28,20 +35,20 @@ body {
   padding: 0;
   background: var(--color-bg);
   color: var(--color-fg);
-  overflow-x: hidden; /* Only hide horizontal scroll */
-  overflow-y: auto; /* Allow vertical scroll by default */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* ✅ GLOBAL SCROLLBAR HIDE - Apply to html and body */
+/* Global Scrollbar Hide */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
 
 html,
 body {
-  -ms-overflow-style: none; /* IE & Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 #root {
@@ -330,7 +337,7 @@ input[type="button"],
 }
 
 /* ==========================
-   Home Page - Perfectly Centered
+   Home Page - Fixed Height, No Scroll
 ========================== */
 .home-page {
   height: calc(100vh - var(--header-height) - var(--footer-height));
@@ -338,7 +345,7 @@ input[type="button"],
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   overflow: hidden;
   position: relative;
 }
@@ -349,6 +356,28 @@ input[type="button"],
   z-index: 10;
 }
 
+/* Mobile-specific adjustments for home page */
+@media (max-width: 640px) {
+  .home-page {
+    padding: 0.5rem;
+    height: calc(100vh - var(--header-height) - var(--footer-height));
+  }
+}
+
+/* Touch device optimization - prevent any scrolling on home */
+@media (hover: none) and (pointer: coarse) {
+  .home-page {
+    position: fixed;
+    top: var(--header-height);
+    bottom: var(--footer-height);
+    left: 0;
+    right: 0;
+    height: auto;
+    overflow: hidden;
+    touch-action: none;
+  }
+}
+
 /* ==========================
    Contact Page - Perfectly Centered
 ========================== */
@@ -357,15 +386,21 @@ input[type="button"],
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .contact-page {
+    padding: 0.5rem;
+  }
 }
 
 .contact-box {
   background: #0f1620;
   border: 1px solid #1b2636;
   border-radius: 1rem;
-  padding: 2rem;
+  padding: 1.5rem;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
@@ -373,16 +408,36 @@ input[type="button"],
   animation: fadeIn 0.6s ease;
 }
 
+@media (min-width: 640px) {
+  .contact-box {
+    padding: 2rem;
+  }
+}
+
 .contact-box h2 {
-  font-size: 1.6rem;
-  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
   color: var(--color-primary);
 }
 
+@media (min-width: 640px) {
+  .contact-box h2 {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+}
+
 .contact-box p {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--color-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .contact-box p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .contact-box input,
@@ -429,16 +484,25 @@ input[type="button"],
 }
 
 /* ==========================
-   About Page - Scrollable Content (Updated for actual structure)
+   About Page - Scrollable Content
 ========================== */
 .about-page {
   min-height: 100vh;
-  padding-top: 5.5rem;
-  padding-bottom: 5.5rem;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-top: calc(var(--header-height) + 1.5rem);
+  padding-bottom: calc(var(--footer-height) + 1.5rem);
+  padding-left: 1rem;
+  padding-right: 1rem;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .about-page {
+    padding-top: calc(var(--header-height) + 2rem);
+    padding-bottom: calc(var(--footer-height) + 2rem);
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 .about-content {
@@ -450,12 +514,19 @@ input[type="button"],
 /* Fix for About page with min-h-screen */
 .min-h-screen {
   min-height: 100vh;
-  padding-top: 5.5rem !important;
-  padding-bottom: 5.5rem !important;
+  padding-top: calc(var(--header-height) + 1.5rem) !important;
+  padding-bottom: calc(var(--footer-height) + 1.5rem) !important;
+}
+
+@media (min-width: 640px) {
+  .min-h-screen {
+    padding-top: calc(var(--header-height) + 2rem) !important;
+    padding-bottom: calc(var(--footer-height) + 2rem) !important;
+  }
 }
 
 /* ==========================
-   ✅ Custom Scrollbar Class for Components
+   Custom Scrollbar Class for Components
 ========================== */
 .custom-scrollbar {
   -ms-overflow-style: none;
@@ -464,4 +535,34 @@ input[type="button"],
 
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* ==========================
+   Mobile Menu Overlay
+========================== */
+@media (max-width: 767px) {
+  /* Prevent body scroll when mobile menu is open */
+  body.menu-open {
+    overflow: hidden;
+  }
+}
+
+/* ==========================
+   Responsive Typography
+========================== */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .text-lg {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
 }
