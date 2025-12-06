@@ -13,7 +13,7 @@ load_dotenv()
 app = FastAPI(title="EchoIntellect Backend", version="0.2.1")
 
 # ==========================
-# ✅ CORS Configuration
+# âœ… CORS Configuration
 # ==========================
 origins = ["*", os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")]
 app.add_middleware(
@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # ==========================
-# 📦 Data Models
+# ðŸ“¦ Data Models
 # ==========================
 class AskBody(BaseModel):
     model: str
@@ -36,12 +36,12 @@ class ShareBody(BaseModel):
     response: str
 
 # ==========================
-# 🧠 In-memory share storage
+# ðŸ§  In-memory share storage
 # ==========================
 SHARES: Dict[str, Dict] = {}
 
 # ==========================
-# 🧹 Utility Functions
+# ðŸ§¹ Utility Functions
 # ==========================
 def clean_text(text: str) -> str:
     if not text:
@@ -97,7 +97,7 @@ def format_response(answer: str) -> str:
     answer = re.sub(r"\n{3,}", "\n\n", answer)
     answer = re.sub(r"[ \t]+\n", "\n", answer)
 
-    answer = re.sub(r"•", "-", answer)
+    answer = re.sub(r"â€¢", "-", answer)
     answer = re.sub(r"(?<!\n)\s*-\s+", "\n- ", answer)
 
     answer = re.sub(r"\s{2,}", " ", answer)
@@ -107,7 +107,7 @@ def format_response(answer: str) -> str:
     return answer.strip()
 
 # ==========================
-# 🚀 Main Ask Endpoint
+# ðŸš€ Main Ask Endpoint
 # ==========================
 @app.post("/api/ask")
 def ask(body: AskBody):
@@ -127,8 +127,8 @@ def ask(body: AskBody):
             instruction = (
                 "You are Gemini 2.5 Flash.\n\n"
                 "CRITICAL: Respond in THE SAME LANGUAGE as the user's input.\n"
-                "- English input → English output\n"
-                "- Hinglish input → Hinglish output\n"
+                "- English input â†’ English output\n"
+                "- Hinglish input â†’ Hinglish output\n"
                 "- NEVER use Devanagari script\n\n"
                 f"{body.prompt}"
             )
@@ -223,63 +223,23 @@ def ask(body: AskBody):
             except Exception as e:
                 return handle_api_exception(e, "Perplexity")
 
-        # --- DeepSeek (Updated for new API response structure) ---
+        # --- DeepSeek ---
         if body.model.lower() == "deepseek":
             try:
-                answer = ""
-                
-                # Check multiple possible response structures
-                if isinstance(data, dict):
-                    # Structure 1: Direct result field
-                    if "result" in data:
-                        answer = data["result"]
-                    
-                    # Structure 2: choices array (standard format)
-                    elif "choices" in data and isinstance(data["choices"], list) and len(data["choices"]) > 0:
-                        choice = data["choices"][0]
-                        if isinstance(choice, dict):
-                            if "message" in choice:
-                                msg = choice["message"]
-                                answer = msg.get("content") or msg.get("reasoning_content", "")
-                            elif "text" in choice:
-                                answer = choice["text"]
-                    
-                    # Structure 3: Direct response/content field
-                    elif "response" in data:
-                        if isinstance(data["response"], dict):
-                            answer = data["response"].get("content") or data["response"].get("text", "")
-                        else:
-                            answer = str(data["response"])
-                    
-                    # Structure 4: Direct content field
-                    elif "content" in data:
-                        answer = data["content"]
-                    
-                    # Structure 5: output_text field
-                    elif "output_text" in data:
-                        answer = data["output_text"]
-                
-                # If still no answer, try to extract from string representation
-                if not answer:
-                    data_str = str(data)
-                    # Try to find content in various formats
-                    matches = re.findall(r"'content':\s*'([^']+)'", data_str)
-                    if not matches:
-                        matches = re.findall(r'"content":\s*"([^"]+)"', data_str)
-                    if matches:
-                        answer = " ".join(matches)
+                choices = data.get("choices")
+                if not choices:
+                    return handle_model_specific_error("DeepSeek", "invalid_response", "No choices returned")
+
+                message = choices[0].get("message")
+                if not message:
+                    return handle_model_specific_error("DeepSeek", "invalid_response", "No message in response")
+
+                answer = message.get("content") or message.get("reasoning_content") or ""
                 
                 if not answer:
-                    return handle_model_specific_error("DeepSeek", "no_response", f"Response structure: {str(data)[:200]}")
+                    return handle_model_specific_error("DeepSeek", "no_response")
                 
-                # Clean up thinking tags if present
                 answer = re.sub(r"<\/?(think|hink)>.*?<\/(think|hink)>", "", answer, flags=re.DOTALL)
-                
-                # Remove meta-commentary/notes from DeepSeek
-                answer = re.sub(r"\(Note:.*?\)", "", answer, flags=re.IGNORECASE)
-                answer = re.sub(r"\[Note:.*?\]", "", answer, flags=re.IGNORECASE)
-                answer = re.sub(r"Note:.*?(as per rules|per rules|according to rules).*?[.!]", "", answer, flags=re.IGNORECASE)
-                
                 parts = [p.strip() for p in answer.splitlines() if p.strip()]
                 answer = "\n".join(parts)
 
@@ -340,7 +300,7 @@ def ask(body: AskBody):
 
 
 # ==========================
-# 🔗 Share API
+# ðŸ”— Share API
 # ==========================
 @app.post("/api/share")
 def create_share(body: ShareBody):
@@ -356,7 +316,7 @@ def create_share(body: ShareBody):
         frontend = os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:5173")
         return {"id": sid, "url": f"{frontend}/share/{sid}"}
     except Exception as e:
-        return {"error": f"❌ Share create karte waqt error aaya: {str(e)}"}
+        return {"error": f"âŒ Share create karte waqt error aaya: {str(e)}"}
 
 @app.get("/api/share/{sid}")
 def get_share(sid: str):
@@ -368,4 +328,4 @@ def get_share(sid: str):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": f"❌ Share retrieve karte waqt error aaya: {str(e)}"}
+        return {"error": f"âŒ Share retrieve karte waqt error aaya: {str(e)}"}

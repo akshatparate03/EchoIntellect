@@ -37,11 +37,12 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "RESPONSE LENGTH RULE:\n"
                         "- If user just says greetings like 'hi', 'hello', 'hey', 'namaste' etc. WITHOUT any question → respond in just 1-2 lines casually\n"
                         "- If user asks ANY question or needs help → give detailed, clear, and structured explanations with proper examples\n\n"
+                        "Always give clear, deep, and structured explanations with proper examples.\n\n"
                         "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
                         "- If user writes in English, respond in English\n"
                         "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
                         "- NEVER respond in Devanagari (Hindi) script\n\n"
-                        "Provide proper spacing and line breaks in responses specially in codes.\n"
+                        "Provide proper spacing and line breaks in responses specially in codes.\n\n"
                         "Respond as if explaining to a beginner clearly and completely.\n\n"
                     )
                 },
@@ -51,7 +52,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         return url, headers, payload, None
 
     # ==============================
-    # ✅ GEMINI (Fixed Language Handling)
+    # âœ… GEMINI (Fixed Language Handling)
     # ==============================
     if model == "gemini":
         api_key = os.getenv("GEMINI_KEY")
@@ -69,9 +70,9 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                 "CRITICAL LANGUAGE RULE:\n"
                 "- Carefully detect the language of the user's input\n"
                 "- Respond in EXACTLY THE SAME LANGUAGE as the user\n"
-                "- If user writes in English → respond in English\n"
-                "- If user writes in Hinglish (Hindi using Roman/English script) → respond in Hinglish\n"
-                "- NEVER use Devanagari (हिंदी) script\n"
+                "- If user writes in English â†’ respond in English\n"
+                "- If user writes in Hinglish (Hindi using Roman/English script) â†’ respond in Hinglish\n"
+                "- NEVER use Devanagari (à¤¹à¤¿à¤‚à¤¦à¥€) script\n"
                 "- NEVER translate the user's language\n\n"
                 "Always give clear, deep, and structured explanations with proper examples.\n"
                 "Provide proper spacing and line breaks in responses specially in codes.\n"
@@ -134,11 +135,16 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         return url, headers, payload, None
 
     # ==============================
-    # DEEPSEEK (Updated to new API)
+    # DEEPSEEK
     # ==============================
     if model == "deepseek":
         url = os.getenv("DEEPSEEK_URL")
         host = os.getenv("DEEPSEEK_HOST")
+        
+        if not url:
+            raise ValueError("DEEPSEEK_URL environment variable missing")
+        if not host:
+            raise ValueError("DEEPSEEK_HOST environment variable missing")
         
         headers = {
             "x-rapidapi-key": rapidapi_key,
@@ -147,9 +153,10 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
         }
 
         payload = {
+            "model": "DeepSeek-V3-0324",
             "messages": [
                 {
-                    "role": "user",
+                    "role": "system",
                     "content": (
                         "You are an advanced AI model named DeepSeek V3.\n\n"
                         "RESPONSE LENGTH RULE:\n"
@@ -162,11 +169,15 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "Always give long, detailed, and deeply explained answers with examples where possible.\n"
                         "Provide proper spacing and line breaks in responses specially in codes.\n"
                         "Explain concepts like a teacher explaining to a beginner.\n\n"
-                        f"User's question: {prompt}"
                     )
+                },
+                {
+                    "role": "user",
+                    "content": prompt
                 }
             ],
-            "web_access": False
+            "max_tokens": 2048,
+            "temperature": 0.8
         }
         return url, headers, payload, None
 
@@ -194,6 +205,7 @@ def build_request(model: str, prompt: str, rapidapi_key: str):
                         "RESPONSE LENGTH RULE:\n"
                         "- If user just says greetings like 'hi', 'hello', 'hey', 'namaste' etc. WITHOUT any question → respond in just 1-2 lines casually\n"
                         "- If user asks ANY question or needs help → give detailed, clear, and structured explanations with proper examples\n\n"
+                        "Always give clear, deep, and structured explanations with proper examples.\n\n"
                         "IMPORTANT: Detect the user's language and respond in THE SAME LANGUAGE.\n"
                         "- If user writes in English, respond in English\n"
                         "- If user writes in Hinglish (Hindi written in English), respond in Hinglish\n"
