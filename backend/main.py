@@ -5,7 +5,7 @@ import os, requests, uuid, time, re
 from typing import Dict
 from models_config import build_request
 from dotenv import load_dotenv
-from google import genai
+import google.genai as genai
 from error_handler import get_error_message, handle_api_exception, handle_model_specific_error
 
 load_dotenv()
