@@ -14,6 +14,7 @@ export default function Login() {
   // Sign In States
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Sign Up States
   const [firstName, setFirstName] = useState("");
@@ -54,6 +55,7 @@ export default function Login() {
   const switchMode = () => {
     setMode((m) => (m === "signin" ? "signup" : "signin"));
     setError(null);
+    setEmailError(null);
     // Reset signup states
     setFirstName("");
     setLastName("");
@@ -100,6 +102,22 @@ export default function Login() {
   ) => {
     if (/^[a-zA-Z\s]*$/.test(value)) {
       setter(value);
+    }
+  };
+
+  // Handle Sign In email input - check if user exists
+  const handleSignInEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailError(null);
+    setError(null);
+
+    // Real-time check if email exists (only after complete email with .com)
+    if (value.trim() && value.endsWith(".com")) {
+      if (!checkUserExists(value)) {
+        setEmailError(
+          "This email is not registered. Please create an account."
+        );
+      }
     }
   };
 
@@ -202,6 +220,16 @@ export default function Login() {
   async function submitSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setEmailError(null);
+
+    // Check if email exists first
+    if (!checkUserExists(email)) {
+      const errMsg = "This email is not registered. Please create an account.";
+      setEmailError(errMsg);
+      showToast(errMsg);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -213,8 +241,12 @@ export default function Login() {
       }, 1500);
     } catch (err: any) {
       const msg = err?.message || "Something went wrong!";
-      setError(msg);
-      showToast(msg);
+      // If credentials are invalid, it means password is wrong (email already checked)
+      const displayMsg = msg.includes("Invalid credentials")
+        ? "Invalid password. Please try again."
+        : msg;
+      setError(displayMsg);
+      showToast(displayMsg);
       setIsLoading(false);
     }
   }
@@ -309,10 +341,13 @@ export default function Login() {
                     placeholder="username@gmail.com"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleSignInEmailChange(e.target.value)}
                     disabled={isLoading}
                     className="w-full px-4 py-2.5 bg-gray-800/40 border border-emerald-500/30 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   />
+                  {emailError && (
+                    <p className="text-red-400 text-xs mt-1">{emailError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
