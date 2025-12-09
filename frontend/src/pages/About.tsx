@@ -108,7 +108,7 @@ export default function About() {
                   style={{ aspectRatio: "1/1" }}
                 />
                 <a
-                  href="https://www.linkedin.com/in/akshat-parate"
+                  href="https://www.linkedin.com/in/akshatparate03"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100
