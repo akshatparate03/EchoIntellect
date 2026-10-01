@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import { isAuthenticated, currentEmail, currentUserName } from "../utils/auth";
 import { useNavigate } from "react-router-dom";

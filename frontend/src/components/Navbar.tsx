@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import LogoutToast from "./LogoutToast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -11,21 +9,7 @@ export default function Navbar() {
   const authed = isAuthenticated();
 
   const [showLogoutToast, setShowLogoutToast] = useState(false);
-  const [hasComparison, setHasComparison] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem("comparisonData");
-    setHasComparison(!!saved);
-
-    const handleStorageChange = () => {
-      const updated = sessionStorage.getItem("comparisonData");
-      setHasComparison(!!updated);
-    };
-
-    const interval = setInterval(handleStorageChange, 100);
-    return () => clearInterval(interval);
-  }, [pathname]);
 
   // Close menu when route changes
   useEffect(() => {
@@ -101,14 +85,14 @@ export default function Navbar() {
               Contact
             </Link>
 
-            {hasComparison && (
+            {authed && (
               <Link
-                to="/compare"
+                to="/chat"
                 className={`hover:text-[var(--color-primary)] transition-colors ${
-                  pathname === "/compare" ? "text-[var(--color-primary)]" : ""
+                  pathname.startsWith("/chat") ? "text-[var(--color-primary)]" : ""
                 }`}
               >
-                Compare
+                My Chats
               </Link>
             )}
 
@@ -204,16 +188,16 @@ export default function Navbar() {
               Contact
             </Link>
 
-            {hasComparison && (
+            {authed && (
               <Link
-                to="/compare"
+                to="/chat"
                 className={`px-4 py-3 rounded-lg text-white hover:bg-gray-800 transition-colors ${
-                  pathname === "/compare"
+                  pathname.startsWith("/chat")
                     ? "bg-gray-800 text-[var(--color-primary)]"
                     : ""
                 }`}
               >
-                Compare
+                My Chats
               </Link>
             )}
 

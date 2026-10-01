@@ -3,7 +3,7 @@ Custom Error Handler for EchoIntellect Backend
 Handles all HTTP error codes with user-friendly Hindi/Hinglish messages
 """
 
-from typing import Dict, Optional
+from typing import Dict
 
 def get_error_message(status_code: int, model_name: str = "", custom_msg: str = "") -> Dict[str, str]:
     """
@@ -26,6 +26,8 @@ def get_error_message(status_code: int, model_name: str = "", custom_msg: str = 
         
         401: f"Error:- Authentication fail ho gaya {model_display} ka. API key ya credentials galat ho sakta hai.",
         
+        402: f"Error:- {model_display} ke liye OpenRouter account me credits khatam ho gaye hain. Credits add kare ya limit check kare.",
+
         403: f"Error:- Aapko {model_display} dwaara is resource ko access karne ki permission nahi hai.",
         
         404: f"Error:- Requested resource {model_display} ko nahi mila. API endpoint ya URL galat ho sakta hai.",

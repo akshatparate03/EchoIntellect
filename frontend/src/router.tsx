@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
-import Compare from "./pages/Compare";
+import Chat from "./pages/Chat";
 import ShareView from "./pages/ShareView";
 
 export const router = createBrowserRouter([
@@ -15,7 +15,9 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: "about", element: <About /> },
       { path: "contact", element: <Contact /> },
-      { path: "compare", element: <Compare /> },
+      { path: "chat", element: <Chat /> },
+      { path: "chat/:id", element: <Chat /> },
+      { path: "compare", element: <Navigate to="/chat" replace /> }, // old link
       { path: "share/:id", element: <ShareView /> },
     ],
   },

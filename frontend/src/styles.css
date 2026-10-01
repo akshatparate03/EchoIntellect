@@ -10,10 +10,6 @@
   --color-primary: #0ea5a5;
   --color-accent: #f59e0b;
 
-  --diff-red: rgba(239, 68, 68, 0.18);
-  --diff-blue: rgba(59, 130, 246, 0.18);
-  --diff-green: rgba(34, 197, 94, 0.18);
-  --diff-yellow: rgba(234, 179, 8, 0.18);
 
   --header-height: 3.5rem;
   --footer-height: 3.75rem;
@@ -58,40 +54,11 @@ body {
 }
 
 /* ==========================
-   Fixed Layout for Home & Contact Only
-========================== */
-body.no-scroll {
-  overflow: hidden;
-  height: 100vh;
-}
-
-body.no-scroll #root {
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ==========================
    Main Content Area
 ========================== */
 .main-content {
   flex: 1;
   width: 100%;
-}
-
-/* Scrollable pages (About, etc.) */
-.scrollable-page {
-  min-height: calc(100vh - var(--header-height) - var(--footer-height));
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-/* Fixed pages (Home, Contact) */
-.fixed-page {
-  height: calc(100vh - var(--header-height) - var(--footer-height));
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 /* ==========================
@@ -118,23 +85,6 @@ footer {
   height: var(--footer-height);
   background: #0f1620;
   border-top: 1px solid #1b2636;
-}
-
-/* ==========================
-   Prevent flicker on route change
-========================== */
-.fade-enter,
-.fade-exit {
-  transition: opacity 0.25s ease-in-out;
-}
-.fade-enter {
-  opacity: 0;
-}
-.fade-enter-active {
-  opacity: 1;
-}
-.fade-exit-active {
-  opacity: 0;
 }
 
 /* ==========================
@@ -243,47 +193,6 @@ footer {
 }
 
 /* ==========================
-   Auth Sliding Panel
-========================== */
-.auth-slider {
-  transition: transform 400ms ease;
-}
-
-/* ==========================
-   Highlight Markers
-========================== */
-.mark-red {
-  background: var(--diff-red);
-}
-.mark-blue {
-  background: var(--diff-blue);
-}
-.mark-green {
-  background: var(--diff-green);
-}
-.mark-yellow {
-  background: var(--diff-yellow);
-}
-
-/* ==========================
-   Toast Animation
-========================== */
-@keyframes slide-in {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-/* ==========================
    Cursor Pointer Fix
 ========================== */
 button,
@@ -337,217 +246,6 @@ input[type="button"],
 }
 
 /* ==========================
-   Home Page - Fixed Height, No Scroll
-========================== */
-.home-page {
-  position: fixed;
-  top: var(--header-height);
-  bottom: var(--footer-height);
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  overflow: hidden !important;
-}
-
-.home-page .hero-content {
-  max-width: 900px;
-  text-align: center;
-  z-index: 10;
-}
-
-/* Mobile-specific adjustments for home page */
-@media (max-width: 640px) {
-  .home-page {
-    padding: 0.5rem;
-  }
-}
-
-/* Touch device optimization - prevent any scrolling on home */
-@media (hover: none) and (pointer: coarse) {
-  /* Only apply to home page route */
-  body:has([class*="home"]) {
-    position: fixed;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  body:has([class*="home"]) #root {
-    overflow: hidden !important;
-    height: 100vh;
-    position: fixed;
-    width: 100%;
-  }
-}
-
-/* ==========================
-   Contact Page - Perfectly Centered
-========================== */
-.contact-page {
-  position: fixed;
-  top: var(--header-height);
-  bottom: var(--footer-height);
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  overflow: hidden !important;
-}
-
-@media (max-width: 640px) {
-  .contact-page {
-    padding: 0.5rem;
-  }
-}
-
-.contact-box {
-  background: #0f1620;
-  border: 1px solid #1b2636;
-  border-radius: 1rem;
-  padding: 1.25rem;
-  width: 100%;
-  max-width: 500px;
-  max-height: calc(100vh - var(--header-height) - var(--footer-height) - 1rem);
-  overflow-y: auto;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  text-align: center;
-  animation: fadeIn 0.6s ease;
-}
-
-.contact-box::-webkit-scrollbar {
-  display: none;
-}
-
-.contact-box {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-@media (min-width: 640px) {
-  .contact-box {
-    padding: 2rem;
-    max-height: none;
-    overflow-y: visible;
-  }
-}
-
-.contact-box h2 {
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
-  color: var(--color-primary);
-}
-
-@media (min-width: 640px) {
-  .contact-box h2 {
-    font-size: 1.6rem;
-    margin-bottom: 1rem;
-  }
-}
-
-.contact-box p {
-  font-size: 0.85rem;
-  color: var(--color-muted);
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 640px) {
-  .contact-box p {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-  }
-}
-
-.contact-box input,
-.contact-box textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #1b2636;
-  background: #0c1118;
-  color: var(--color-fg);
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.contact-box input:focus,
-.contact-box textarea:focus {
-  border-color: var(--color-primary);
-}
-
-.contact-box button {
-  background: var(--color-primary);
-  color: #031314;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  transition: background 0.3s ease;
-}
-
-.contact-box button:hover {
-  background: #0b8a8a;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ==========================
-   About Page - Scrollable Content
-========================== */
-.about-page {
-  min-height: 100vh;
-  padding-top: calc(var(--header-height) + 1.5rem);
-  padding-bottom: calc(var(--footer-height) + 1.5rem);
-  padding-left: 1rem;
-  padding-right: 1rem;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-@media (min-width: 640px) {
-  .about-page {
-    padding-top: calc(var(--header-height) + 2rem);
-    padding-bottom: calc(var(--footer-height) + 2rem);
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
-.about-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 0;
-}
-
-/* Fix for About page with min-h-screen */
-.min-h-screen {
-  min-height: 100vh;
-  padding-top: calc(var(--header-height) + 1.5rem) !important;
-  padding-bottom: calc(var(--footer-height) + 1.5rem) !important;
-}
-
-@media (min-width: 640px) {
-  .min-h-screen {
-    padding-top: calc(var(--header-height) + 2rem) !important;
-    padding-bottom: calc(var(--footer-height) + 2rem) !important;
-  }
-}
-
-/* ==========================
    Custom Scrollbar Class for Components
 ========================== */
 .custom-scrollbar {
@@ -557,16 +255,6 @@ input[type="button"],
 
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-/* ==========================
-   Mobile Menu Overlay
-========================== */
-@media (max-width: 767px) {
-  /* Prevent body scroll when mobile menu is open */
-  body.menu-open {
-    overflow: hidden;
-  }
 }
 
 /* ==========================
@@ -587,4 +275,38 @@ input[type="button"],
     font-size: 1rem;
     line-height: 1.5rem;
   }
+}
+
+/* ==========================
+   Pages using min-h-screen (About, Share) - keep clear of fixed header/footer
+========================== */
+.min-h-screen {
+  min-height: 100vh;
+  padding-top: calc(var(--header-height) + 1.5rem) !important;
+  padding-bottom: calc(var(--footer-height) + 1.5rem) !important;
+}
+
+@media (min-width: 640px) {
+  .min-h-screen {
+    padding-top: calc(var(--header-height) + 2rem) !important;
+    padding-bottom: calc(var(--footer-height) + 2rem) !important;
+  }
+}
+
+/* ==========================
+   Toast slide-in (LogoutToast, Contact)
+========================== */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-toastSlideIn {
+  animation: toastSlideIn 0.3s ease-out;
 }

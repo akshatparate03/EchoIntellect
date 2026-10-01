@@ -1,7 +1,12 @@
-"use client";
-
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { signIn, isAuthenticated, checkUserExists } from "../utils/auth";
+import {
+  signIn,
+  signUp,
+  isAuthenticated,
+  checkUserExists,
+  sendOtp,
+  verifyOtp,
+} from "../utils/auth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import LogoutToast from "../components/LogoutToast";
 
@@ -21,7 +26,7 @@ export default function Login() {
   const [lastName, setLastName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [sentOtp, setSentOtp] = useState("");
+  const [signupToken, setSignupToken] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [signupPassword, setSignupPassword] = useState("");
@@ -52,6 +57,12 @@ export default function Login() {
     setToastVisible(true);
   }, []);
 
+  // Already logged in -> no need to see the login page
+  useEffect(() => {
+    if (isAuthenticated()) nav(next, { replace: true });
+    // eslint-disable-next-line
+  }, []);
+
   const switchMode = () => {
     setMode((m) => (m === "signin" ? "signup" : "signin"));
     setError(null);
@@ -61,7 +72,7 @@ export default function Login() {
     setLastName("");
     setSignupEmail("");
     setOtp("");
-    setSentOtp("");
+    setSignupToken("");
     setOtpSent(false);
     setOtpVerified(false);
     setSignupPassword("");
@@ -105,38 +116,47 @@ export default function Login() {
     }
   };
 
-  // Handle Sign In email input - check if user exists
+  // Sign In email input
   const handleSignInEmailChange = (value: string) => {
     setEmail(value);
     setEmailError(null);
     setError(null);
+  };
 
-    // Real-time check if email exists (only after complete email with .com)
-    if (value.trim() && value.endsWith(".com")) {
-      if (!checkUserExists(value)) {
-        setEmailError(
-          "This email is not registered. Please create an account."
-        );
+  // When the user leaves the Sign In email box - check if the account exists
+  const handleSignInEmailBlur = async () => {
+    const value = email.trim();
+    if (!value || !value.includes("@")) return;
+    try {
+      if (!(await checkUserExists(value))) {
+        setEmailError("This email is not registered. Please create an account.");
       }
+    } catch {
+      /* server asleep / offline - the sign in button will show the real error */
     }
   };
 
-  // Handle email input - must end with @gmail.com + check if already exists
+  // Sign Up email input
   const handleEmailChange = (value: string) => {
     setSignupEmail(value);
+    if (error === "User already exists") setError(null);
+  };
 
-    // Check if user already exists (real-time)
-    if (value.endsWith("@gmail.com")) {
-      if (checkUserExists(value)) {
+  // When the user leaves the Sign Up email box - check if already registered
+  const handleSignupEmailBlur = async () => {
+    const value = signupEmail.trim();
+    if (!value.endsWith("@gmail.com")) return;
+    try {
+      if (await checkUserExists(value)) {
         showToast("User already exists! Please sign in instead.");
         setError("User already exists");
-      } else {
-        setError(null);
       }
+    } catch {
+      /* ignore - "Send OTP" will show the real error */
     }
   };
 
-  // Send OTP
+  // Send OTP (the backend generates it and emails it)
   const handleSendOtp = async () => {
     // Validate inputs
     if (!firstName.trim()) {
@@ -156,62 +176,39 @@ export default function Login() {
       return;
     }
 
-    // Check again before sending OTP
-    if (checkUserExists(signupEmail)) {
-      showToast("User already exists! Please sign in instead.");
-      setError("User already exists");
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // Generate 6-digit OTP
-      const generatedOtp = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      setSentOtp(generatedOtp);
-
-      // Send OTP via Apps Script
-      const OTP_SCRIPT_URL = import.meta.env.VITE_OTP_SCRIPT_URL;
-      if (!OTP_SCRIPT_URL) {
-        throw new Error("OTP service not configured");
-      }
-
-      await fetch(OTP_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: signupEmail,
-          otp: generatedOtp,
-          name: `${firstName} ${lastName}`,
-        }),
-      });
-
+      await sendOtp(`${firstName.trim()} ${lastName.trim()}`, signupEmail.trim());
       setOtpSent(true);
       setOtpTimer(60); // 60 seconds timer
       showToast("OTP sent to your email!");
-    } catch (err) {
-      showToast("Failed to send OTP. Please try again!");
+    } catch (err: any) {
+      const msg = err?.message || "Failed to send OTP. Please try again!";
+      if (msg.startsWith("User already exists")) setError("User already exists");
+      showToast(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Verify OTP
-  const handleVerifyOtp = () => {
-    if (otp !== sentOtp) {
-      showToast("Invalid OTP! Please enter correct OTP.");
-      return;
+  // Verify OTP (checked by the backend)
+  const handleVerifyOtp = async () => {
+    setIsLoading(true);
+    try {
+      const token = await verifyOtp(signupEmail.trim(), otp);
+      setSignupToken(token);
+      setOtpVerified(true);
+      showToast("OTP verified successfully!");
+    } catch (err: any) {
+      showToast(err?.message || "Invalid OTP! Please enter correct OTP.");
+    } finally {
+      setIsLoading(false);
     }
-    setOtpVerified(true);
-    showToast("OTP verified successfully!");
   };
 
   // Resend OTP
   const handleResendOtp = () => {
     setOtp("");
-    setSentOtp("");
     setOtpSent(false);
     handleSendOtp();
   };
@@ -221,19 +218,10 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setEmailError(null);
-
-    // Check if email exists first
-    if (!checkUserExists(email)) {
-      const errMsg = "This email is not registered. Please create an account.";
-      setEmailError(errMsg);
-      showToast(errMsg);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const res = await signIn(email, pass);
+      const res = await signIn(email.trim(), pass);
       showToast(res?.message || "Logged in successfully!");
 
       setTimeout(() => {
@@ -241,12 +229,9 @@ export default function Login() {
       }, 1500);
     } catch (err: any) {
       const msg = err?.message || "Something went wrong!";
-      // If credentials are invalid, it means password is wrong (email already checked)
-      const displayMsg = msg.includes("Invalid credentials")
-        ? "Invalid password. Please try again."
-        : msg;
-      setError(displayMsg);
-      showToast(displayMsg);
+      if (msg.includes("not registered")) setEmailError(msg);
+      else setError(msg);
+      showToast(msg);
       setIsLoading(false);
     }
   }
@@ -270,10 +255,7 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Import signUp here to avoid circular dependency
-      const { signUp } = await import("../utils/auth");
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      const res = await signUp(signupEmail, signupPassword, fullName);
+      const res = await signUp(signupEmail.trim(), signupPassword, signupToken);
       showToast(res?.message || "Welcome to EchoIntellect!");
 
       setTimeout(() => {
@@ -304,18 +286,16 @@ export default function Login() {
     passNoSpace;
 
   return (
-    <div
-      className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden text-white"
-      style={{
-        backgroundImage: "url('/Images/LoginBG.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="absolute inset-0 bg-black/60 -z-10" />
+    <div className="login-bg fixed inset-0 w-screen h-screen overflow-y-auto text-white">
+      {/* Animated background (pure CSS - no image) */}
+      <div className="login-bg-grid" aria-hidden="true" />
+      <div className="login-orb login-orb-1" aria-hidden="true" />
+      <div className="login-orb login-orb-2" aria-hidden="true" />
+      <div className="login-orb login-orb-3" aria-hidden="true" />
+      <div className="login-bg-vignette" aria-hidden="true" />
 
-      <div className="relative z-10 w-full max-w-sm px-4">
+      <div className="relative z-10 min-h-full flex py-6">
+      <div className="m-auto w-full max-w-sm px-4">
         <div className="bg-white/4 backdrop-blur-md border border-white/30 rounded-3xl shadow-2xl shadow-emerald-500/20">
           <div className="p-6">
             <div className="mb-6 text-center">
@@ -342,6 +322,7 @@ export default function Login() {
                     required
                     value={email}
                     onChange={(e) => handleSignInEmailChange(e.target.value)}
+                    onBlur={handleSignInEmailBlur}
                     disabled={isLoading}
                     className="w-full px-4 py-2.5 bg-gray-800/40 border border-emerald-500/30 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   />
@@ -432,6 +413,7 @@ export default function Login() {
                         required
                         value={signupEmail}
                         onChange={(e) => handleEmailChange(e.target.value)}
+                        onBlur={handleSignupEmailBlur}
                         disabled={isLoading || otpSent}
                         className="w-full px-4 py-2.5 bg-gray-800/40 border border-emerald-500/30 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       />
@@ -481,7 +463,7 @@ export default function Login() {
                           <button
                             type="button"
                             onClick={handleVerifyOtp}
-                            disabled={otp.length !== 6}
+                            disabled={otp.length !== 6 || isLoading}
                             className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-md disabled:opacity-50 hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/30"
                           >
                             Verify OTP
@@ -668,6 +650,7 @@ export default function Login() {
           </div>
         </div>
       </div>
+      </div>
 
       <LogoutToast
         show={toastVisible}
@@ -676,6 +659,68 @@ export default function Login() {
       />
 
       <style>{`
+        .login-bg {
+          background:
+            radial-gradient(ellipse 80% 60% at 15% 10%, rgba(16, 185, 129, 0.22), transparent 60%),
+            radial-gradient(ellipse 70% 60% at 90% 95%, rgba(20, 184, 166, 0.20), transparent 60%),
+            radial-gradient(ellipse 50% 50% at 85% 10%, rgba(99, 102, 241, 0.16), transparent 60%),
+            #060b11;
+        }
+        .login-bg-grid {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background-image:
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+          background-size: 48px 48px;
+          -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+          mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+        }
+        .login-orb {
+          position: fixed;
+          border-radius: 9999px;
+          filter: blur(70px);
+          pointer-events: none;
+          opacity: 0.55;
+        }
+        .login-orb-1 {
+          width: 26rem; height: 26rem; top: -8rem; left: -6rem;
+          background: #10b981;
+          animation: loginFloat1 18s ease-in-out infinite;
+        }
+        .login-orb-2 {
+          width: 30rem; height: 30rem; bottom: -12rem; right: -8rem;
+          background: #0d9488;
+          animation: loginFloat2 22s ease-in-out infinite;
+        }
+        .login-orb-3 {
+          width: 18rem; height: 18rem; top: 40%; right: 18%;
+          background: #6366f1;
+          opacity: 0.3;
+          animation: loginFloat3 26s ease-in-out infinite;
+        }
+        .login-bg-vignette {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+        }
+        @keyframes loginFloat1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(60px, 50px) scale(1.12); }
+        }
+        @keyframes loginFloat2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-70px, -40px) scale(1.1); }
+        }
+        @keyframes loginFloat3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-40px, 60px) scale(0.9); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .login-orb { animation: none; }
+        }
         html, body {
           overflow: hidden !important;
           height: 100vh;

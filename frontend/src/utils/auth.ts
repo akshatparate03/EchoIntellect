@@ -1,150 +1,61 @@
-import type { ModelKey } from "./api";
-
-const KEY_USERS = "ei:users"; // map: email -> { hash, name }
-const KEY_CURRENT = "ei:current"; // { email }
-const KEY_USAGE = "ei:usage"; // map: "email:date:model" -> count
-
-// Simple hash function (non-crypto, just for local dev)
-function sha256(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return String(hash);
-}
-
-// Load from localStorage
-function load<T>(key: string, defaultValue: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return defaultValue;
-    return JSON.parse(raw);
-  } catch {
-    return defaultValue;
-  }
-}
-
-// Save to localStorage
-function save<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-// ----------------------
-// AUTH FUNCTIONS
-// ----------------------
+import {
+  apiCheckEmail,
+  apiLogin,
+  apiRegister,
+  apiSendOtp,
+  apiVerifyOtp,
+} from "./api";
+import { clearSession, getToken, getUser, setSession } from "./session";
 
 // Is user authenticated?
 export function isAuthenticated(): boolean {
-  const curr = load<{ email: string } | null>(KEY_CURRENT, null);
-  return !!curr?.email;
+  return !!getToken();
 }
 
 // Return current logged-in email
 export function currentEmail(): string | null {
-  const curr = load<{ email: string } | null>(KEY_CURRENT, null);
-  return curr?.email ?? null;
+  return getUser()?.email ?? null;
 }
 
 // Return current logged-in user's full name
 export function currentUserName(): string | null {
-  const email = currentEmail();
-  if (!email) return null;
-
-  const users = load<Record<string, { hash: string; name?: string }>>(
-    KEY_USERS,
-    {}
-  );
-  return users[email]?.name ?? null;
+  return getUser()?.name || null;
 }
 
 // Check if user already exists
-export function checkUserExists(email: string): boolean {
-  const users = load<Record<string, { hash: string; name?: string }>>(
-    KEY_USERS,
-    {}
-  );
-  return !!users[email];
+export async function checkUserExists(email: string): Promise<boolean> {
+  return (await apiCheckEmail(email)).exists;
 }
 
-// SIGN UP
-export function signUp(
+// SIGN UP - step 1: email the OTP
+export async function sendOtp(name: string, email: string): Promise<void> {
+  await apiSendOtp(name, email);
+}
+
+// SIGN UP - step 2: verify the OTP, returns a short-lived signup token
+export async function verifyOtp(email: string, otp: string): Promise<string> {
+  return (await apiVerifyOtp(email, otp)).signup_token;
+}
+
+// SIGN UP - step 3: create the account
+export async function signUp(
   email: string,
   password: string,
-  name?: string
-): { message: string } {
-  const users = load<Record<string, { hash: string; name?: string }>>(
-    KEY_USERS,
-    {}
-  );
-
-  if (users[email]) {
-    throw new Error("User already exists");
-  }
-
-  users[email] = {
-    hash: sha256(password),
-    name: name || "",
-  };
-  save(KEY_USERS, users);
-  save(KEY_CURRENT, { email });
-
-  return { message: "Account created successfully!" };
+  signupToken: string
+): Promise<{ message: string }> {
+  const res = await apiRegister(email, password, signupToken);
+  setSession(res.token, res.user);
+  return { message: res.message || "Account created successfully!" };
 }
 
 // SIGN IN
-export function signIn(email: string, password: string): { message: string } {
-  const users = load<Record<string, { hash: string; name?: string }>>(
-    KEY_USERS,
-    {}
-  );
-  const user = users[email];
-
-  if (!user || user.hash !== sha256(password)) {
-    throw new Error("Invalid credentials");
-  }
-
-  save(KEY_CURRENT, { email });
-
-  return { message: "Logged in successfully!" };
+export async function signIn(email: string, password: string): Promise<{ message: string }> {
+  const res = await apiLogin(email, password);
+  setSession(res.token, res.user);
+  return { message: res.message || "Logged in successfully!" };
 }
 
 // SIGN OUT
 export function signOut() {
-  localStorage.removeItem(KEY_CURRENT);
-}
-
-// ----------------------
-// DAILY USAGE LIMITS
-// ----------------------
-
-function usageKey(email: string, date: string, model: ModelKey): string {
-  return `${email}:${date}:${model}`;
-}
-
-// Get remaining free usage for today (limit = 15)
-export function getRemainingForToday(model: ModelKey): number {
-  const email = currentEmail();
-  if (!email) return 0;
-
-  const usage = load<Record<string, number>>(KEY_USAGE, {});
-  const date = new Date().toISOString().slice(0, 10);
-
-  const count = usage[usageKey(email, date, model)] || 0;
-
-  return Math.max(0, 15 - count);
-}
-
-// Increment usage
-export function incrementUsage(model: ModelKey) {
-  const email = currentEmail();
-  if (!email) return;
-
-  const usage = load<Record<string, number>>(KEY_USAGE, {});
-  const date = new Date().toISOString().slice(0, 10);
-
-  const key = usageKey(email, date, model);
-  usage[key] = (usage[key] || 0) + 1;
-
-  save(KEY_USAGE, usage);
+  clearSession();
 }

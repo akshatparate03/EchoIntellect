@@ -1,15 +1,15 @@
-"use client";
-
 import { useState } from "react";
 import PromptInput from "../components/PromptInput";
 import ModelSelectorDialog from "../components/ModelSelectorDialog";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "../utils/auth";
-import type { ModelKey } from "../utils/api";
+import { createConversation, type ModelKey } from "../utils/api";
 
 export default function Home() {
   const [pendingPrompt, setPendingPrompt] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const nav = useNavigate();
 
   function handleSubmit(p: string) {
@@ -17,17 +17,23 @@ export default function Home() {
       nav(`/login?next=${encodeURIComponent("/")}`);
       return;
     }
+    setError(null);
     setPendingPrompt(p);
     setOpen(true);
   }
 
-  function onConfirm(models: ModelKey[]) {
+  async function onConfirm(models: ModelKey[]) {
     setOpen(false);
-    nav(
-      `/compare?prompt=${encodeURIComponent(
-        pendingPrompt
-      )}&models=${models.join(",")}`
-    );
+    setStarting(true);
+    setError(null);
+    try {
+      // New chat is saved in the database, the first prompt is sent from the chat page
+      const conv = await createConversation(models);
+      nav(`/chat/${conv.id}`, { state: { firstPrompt: pendingPrompt } });
+    } catch (e: any) {
+      setError(e?.message || "Could not start the chat. Please try again.");
+      setStarting(false);
+    }
   }
 
   return (
@@ -60,7 +66,10 @@ export default function Home() {
               placeholder="Enter your prompt..."
               onSubmit={handleSubmit}
               autoFocus
+              disabled={starting}
             />
+            {starting && <p className="text-muted text-sm mt-3">Starting your chat…</p>}
+            {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
           </div>
         </div>
       </div>

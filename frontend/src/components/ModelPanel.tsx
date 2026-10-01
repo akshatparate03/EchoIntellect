@@ -1,143 +1,81 @@
-"use client";
-
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DotsLoader from "./DotsLoader";
 import TypewriterText from "./TypewriterText";
-import { askModel, createShare, type ModelKey } from "../utils/api";
+import LogoutToast from "./LogoutToast";
 import PromptInput from "./PromptInput";
-import { getRemainingForToday, incrementUsage } from "../utils/auth";
+import { createShare, type ModelKey, type Turn } from "../utils/api";
 
 export default function ModelPanel({
   model,
-  initialPrompt,
-  currentPrompt,
+  conversationId,
+  turns,
+  pending,
+  localErrors,
+  animateKeys,
+  onTypingDone,
+  remaining,
+  onAsk,
+  onRetry,
   onHeaderClick,
-  onResponse,
-  existingResponse,
   isFullscreen = false,
 }: {
   model: ModelKey;
-  initialPrompt: string;
-  currentPrompt?: string;
+  conversationId: string;
+  /** only the turns meant for this model */
+  turns: Turn[];
+  pending: Record<string, boolean>;
+  localErrors: Record<string, string>;
+  /** keys ("turn:model") of fresh answers that should be typed out */
+  animateKeys: Set<string>;
+  onTypingDone: (key: string) => void;
+  remaining?: number;
+  onAsk: (prompt: string) => void;
+  onRetry: (turn: number) => void;
   onHeaderClick?: () => void;
-  onResponse?: (text: string) => void;
-  existingResponse?: string;
   isFullscreen?: boolean;
 }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [response, setResponse] = useState<string>("");
-  const [shouldAnimate, setShouldAnimate] = useState(false);
-
-  // Toast state
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const fetchedPromptRef = useRef<string>("");
-  const lastUsedPromptRef = useRef<string>(""); // Track last actually used prompt
-  const hasCalledOnResponseRef = useRef(false);
-  const onResponseRef = useRef(onResponse);
-
-  // Update onResponse ref
-  useEffect(() => {
-    onResponseRef.current = onResponse;
-  }, [onResponse]);
-
-  // Set existing response on mount ONCE
-  useEffect(() => {
-    if (existingResponse && !response && !fetchedPromptRef.current) {
-      setResponse(existingResponse);
-      setShouldAnimate(false);
-      hasCalledOnResponseRef.current = true;
-    }
-  }, [existingResponse]);
-
-  // Show toast function
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setToastVisible(true);
   };
 
-  // Auto-hide toast after 3 seconds
+  const key = (t: number) => `${t}:${model}`;
+  const anyPending = turns.some((t) => pending[key(t.turn)]);
+  const lastAnswered = [...turns]
+    .reverse()
+    .find((t) => t.responses[model] && !t.responses[model]!.is_error);
+
+  // keep the newest message in view
+  const lastTurn = turns.length ? turns[turns.length - 1].turn : 0;
+  const hasLastResponse = !!(lastTurn && turns[turns.length - 1].responses[model]);
   useEffect(() => {
-    if (toastVisible) {
-      const timer = setTimeout(() => setToastVisible(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toastVisible]);
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [lastTurn, hasLastResponse, anyPending]);
 
-  /** Model generation logic */
-  async function run(prompt: string) {
-    if (getRemainingForToday(model) <= 0) {
-      setError("Daily limit reached (15)");
-      return;
-    }
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showToast("Response copied to clipboard!");
+  };
 
-    setLoading(true);
-    setError(null);
-    setResponse("");
-    setShouldAnimate(true);
-    hasCalledOnResponseRef.current = false;
-
+  async function share() {
     try {
-      const { text } = await askModel(model, prompt);
-      const cleanText = String(text || "").trim();
-
-      setResponse(cleanText);
-      fetchedPromptRef.current = prompt;
-      lastUsedPromptRef.current = prompt; // Update last used prompt
-      incrementUsage(model);
-
-      // Call onResponse only once
-      if (!hasCalledOnResponseRef.current) {
-        onResponseRef.current?.(cleanText);
-        hasCalledOnResponseRef.current = true;
-      }
-    } catch (error: any) {
-      setError(error?.message || "Failed");
-      setShouldAnimate(false);
-    } finally {
-      setLoading(false);
+      const s = await createShare(conversationId, model);
+      await navigator.clipboard.writeText(s.url);
+      showToast("Share link copied to clipboard!");
+    } catch (e: any) {
+      showToast(e?.message || "Failed to create share link!");
     }
   }
 
-  // Only run when initialPrompt changes AND is not empty AND different from last
-  useEffect(() => {
-    if (
-      initialPrompt &&
-      initialPrompt.trim() !== "" &&
-      initialPrompt !== fetchedPromptRef.current
-    ) {
-      run(initialPrompt);
-    }
-  }, [initialPrompt]);
-
-  /** Smooth displayed body */
-  const body = useMemo(() => {
-    if (loading)
-      return (
-        <div className="flex items-center justify-center h-full py-8">
-          <DotsLoader />
-        </div>
-      );
-
-    if (error) return <div className="text-red-400">{error}</div>;
-
-    if (!response)
-      return <div className="text-muted text-sm">No response yet.</div>;
-
-    // Only animate new responses
-    return shouldAnimate ? (
-      <TypewriterText text={response} onDone={() => setShouldAnimate(false)} />
-    ) : (
-      <div className="whitespace-pre-wrap leading-relaxed">{response}</div>
-    );
-  }, [loading, error, response, shouldAnimate]);
-
   return (
     <section
-      className={`bg-panel/80 border border-panel rounded-xl p-4 flex flex-col backdrop-blur-md shadow-lg ${
-        isFullscreen ? "h-full" : "h-[500px] lg:h-[calc(100vh-14rem)]"
+      className={`bg-panel/80 border border-panel rounded-xl p-4 flex flex-col backdrop-blur-md shadow-lg min-h-0 ${
+        isFullscreen ? "h-full" : "h-[70vh] lg:h-full"
       }`}
     >
       {/* Header */}
@@ -149,96 +87,102 @@ export default function ModelPanel({
         <div className="flex items-center gap-2">
           <button
             className="btn btn-ghost text-xs sm:text-sm px-2 sm:px-4"
-            onClick={() => {
-              navigator.clipboard.writeText(response);
-              showToast("Response copied to clipboard!");
-            }}
-            disabled={!response}
+            onClick={() => lastAnswered && copy(lastAnswered.responses[model]!.content)}
+            disabled={!lastAnswered}
           >
             Copy
           </button>
-
           <button
             className="btn btn-ghost text-xs sm:text-sm px-2 sm:px-4"
-            disabled={!response}
-            onClick={async () => {
-              try {
-                // Priority: lastUsedPrompt > currentPrompt > fetchedPrompt
-                const promptToShare =
-                  lastUsedPromptRef.current ||
-                  currentPrompt ||
-                  fetchedPromptRef.current;
-
-                if (!promptToShare) {
-                  showToast("No prompt to share!");
-                  return;
-                }
-
-                const share = await createShare({
-                  model,
-                  prompt: promptToShare,
-                  response,
-                });
-                await navigator.clipboard.writeText(share.url);
-                showToast("Share link copied to clipboard!");
-              } catch (error) {
-                showToast("Failed to create share link!");
-              }
-            }}
+            onClick={share}
+            disabled={!lastAnswered}
           >
             Share
           </button>
         </div>
       </div>
 
-      {/* Scrollable Response */}
-      <div className="mt-3 flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
-        {body}
+      {/* Scrollable thread */}
+      <div ref={scrollRef} className="mt-3 flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 space-y-5">
+        {turns.length === 0 && <div className="text-muted text-sm">No response yet.</div>}
+
+        {turns.map((t) => {
+          const k = key(t.turn);
+          const r = t.responses[model];
+          const isPending = !!pending[k];
+          const localErr = localErrors[k];
+
+          return (
+            <div key={t.turn} className="space-y-2">
+              {/* user prompt */}
+              <div className="flex justify-end">
+                <div className="max-w-[90%] rounded-2xl rounded-br-sm bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/30 px-3 py-2 text-sm whitespace-pre-wrap break-words">
+                  {t.prompt}
+                </div>
+              </div>
+
+              {/* model answer */}
+              <div>
+                {isPending ? (
+                  <div className="flex items-center justify-center py-6">
+                    <DotsLoader />
+                  </div>
+                ) : localErr ? (
+                  <div className="text-red-400 text-sm">
+                    {localErr}{" "}
+                    {!localErr.startsWith("Daily limit") && (
+                      <button className="underline" onClick={() => onRetry(t.turn)}>
+                        Retry
+                      </button>
+                    )}
+                  </div>
+                ) : r?.is_error ? (
+                  <div className="text-red-400 text-sm whitespace-pre-wrap">
+                    {r.content}{" "}
+                    <button className="underline" onClick={() => onRetry(t.turn)}>
+                      Retry
+                    </button>
+                  </div>
+                ) : r ? (
+                  <>
+                    {animateKeys.has(k) ? (
+                      <TypewriterText text={r.content} onDone={() => onTypingDone(k)} />
+                    ) : (
+                      <div className="whitespace-pre-wrap leading-relaxed">{r.content}</div>
+                    )}
+                    <button
+                      className="mt-1 text-xs text-muted hover:text-white transition-colors"
+                      onClick={() => copy(r.content)}
+                    >
+                      Copy
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-muted text-sm">
+                    No response yet.{" "}
+                    <button className="underline" onClick={() => onRetry(t.turn)}>
+                      Retry
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Input Box */}
+      {/* Input Box - ask only this model */}
       <div className="mt-3 flex-shrink-0">
         <PromptInput
-          placeholder={`${model.toUpperCase()}... (${getRemainingForToday(
-            model
-          )} left today)`}
-          onSubmit={(v) => run(v)}
-          disabled={loading}
+          placeholder={`${model.toUpperCase()}...${
+            remaining !== undefined ? ` (${remaining} left today)` : ""
+          }`}
+          onSubmit={onAsk}
+          disabled={anyPending}
         />
       </div>
 
-      {/* Toast Component - Same Style as Login/Contact */}
-      {toastVisible && (
-        <div className="fixed top-[90px] right-6 bg-[#111827]/90 text-white px-4 py-3 rounded-xl border border-gray-600/70 shadow-xl backdrop-blur-md z-[9999] animate-toastSlideIn">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-            <p className="text-sm font-medium">{toastMessage}</p>
-            <button
-              onClick={() => setToastVisible(false)}
-              className="text-gray-300 hover:text-white ml-2"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Toast Animation CSS */}
-      <style>{`
-        @keyframes toastSlideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-toastSlideIn {
-          animation: toastSlideIn 0.3s ease-out;
-        }
-      `}</style>
+      <LogoutToast show={toastVisible} message={toastMessage} onClose={() => setToastVisible(false)} />
     </section>
   );
 }
