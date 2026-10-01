@@ -880,7 +880,7 @@ Netlify reads `frontend/netlify.toml` automatically (base `frontend`, build `npm
 
 | | |
 | :---: | :---: |
-| <img src="https://avatars.githubusercontent.com/akshatparate03" alt="Akshat Parate" width="100" style="border-radius: 50%"/> | <img src="https://ui-avatars.com/api/?name=Pooja+Soni&background=0ea5a5&color=fff&size=100&rounded=true" alt="Pooja Soni" width="100"/> |
+| <img src="https://avatars.githubusercontent.com/akshatparate03" alt="Akshat Parate" width="100" style="border-radius: 50%"/> | <img src="https://raw.githubusercontent.com/akshatparate03/EchoIntellect/main/frontend/public/Images/PoojaSoni-avatar.jpg" alt="Pooja Soni" width="100" height="100" style="border-radius: 50%"/> |
 | **Akshat Parate** | **Pooja Soni** |
 | _Founder · Backend Developer_ | _Co-Founder · Frontend Developer_ |
 | [![LinkedIn](https://img.shields.io/badge/LinkedIn-akshatparate03-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/akshatparate03) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-pooja--soni098-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pooja-soni098) |
